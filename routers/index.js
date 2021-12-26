@@ -110,6 +110,25 @@ router.post('/schooladmin_register', (req, res) => {
     })
 })
 
+// 获取当前登录用户的全部信息
+router.get('/get_current_login_admin', (req, res) => {
+  // 读取请求参数数据
+  console.log(req.query)
+  const username = req.query
+  console.log(username)
+
+  // 查询(根据username)
+  SchoolAdminModel.find(username).then(schooladmin => {
+      console.log(schooladmin)
+      // 返回包含schooladmin的json数据
+      res.send({status: 0, data: schooladmin})
+    })
+    .catch(error => {
+      console.error('注册异常', error)
+      res.send({status: 1, msg: '添加学校管理员异常, 请重新尝试！'})
+    })
+})
+
 require('./file-upload')(router)
 
 module.exports = router
