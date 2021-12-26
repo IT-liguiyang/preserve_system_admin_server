@@ -129,6 +129,21 @@ router.get('/get_current_login_admin', (req, res) => {
     })
 })
 
+// 修改学校管理员密码
+router.post('/schooladmin_updatepassword', (req, res) => {
+  // 读取请求参数数据
+  console.log(req.body)
+  const { username, password } = req.body
+  // 处理: 判断是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
+  // 查询(根据username)
+  SchoolAdminModel.updateOne({username},{$set:{'password':md5(password)}})
+    .then(res.send({status: 0, msg: '修改密码成功！请重新登录，即将跳转到登录页面！'}))
+    .catch(error => {
+      console.error('注册异常', error)
+      res.send({status: 1, msg: '添加学校管理员异常, 请重新尝试！'})
+    })
+})
+
 require('./file-upload')(router)
 
 module.exports = router
