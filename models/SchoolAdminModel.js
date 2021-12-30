@@ -2,7 +2,7 @@
 能操作schooladmin集合数据的Model
  */
 // 1.引入mongoose
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 // const md5 = require('blueimp-md5')
 
 // 2.字义Schema(描述文档结构)
@@ -15,10 +15,10 @@ const schooladminSchema = new mongoose.Schema({
   ID_number:String, // 身份证号
   role_id: String,
   create_time: {type: Number, default:new Date()}
-})
+});
 
 // 3. 定义Model(与集合对应, 可以操作集合)
-const SchoolAdminModel = mongoose.model('school_admins', schooladminSchema)
+const SchoolAdminModel = mongoose.model('school_admins', schooladminSchema);
 
 // 4. 向外暴露Model
-module.exports = SchoolAdminModel
+module.exports = SchoolAdminModel;
