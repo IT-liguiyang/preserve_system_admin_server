@@ -82,7 +82,6 @@ router.post('/login', (req, res) => {
 // 添加学校管理员
 router.post('/schooladmin_register', (req, res) => {
   // 读取请求参数数据
-  console.log(req.body);
   const { username, password } = req.body;
   // 处理: 判断是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
   // 查询(根据username)
@@ -112,13 +111,10 @@ router.post('/schooladmin_register', (req, res) => {
 // 获取当前登录用户的全部信息
 router.get('/get_current_login_admin', (req, res) => {
   // 读取请求参数数据
-  console.log(req.query);
   const username = req.query;
-  console.log(username);
 
   // 查询(根据username)
   SchoolAdminModel.find(username).then(schooladmin => {
-    console.log(schooladmin);
     // 返回包含schooladmin的json数据
     res.send({status: 0, data: schooladmin});
   })
@@ -131,7 +127,6 @@ router.get('/get_current_login_admin', (req, res) => {
 // 修改学校管理员密码
 router.post('/schooladmin_updatepassword', (req, res) => {
   // 读取请求参数数据
-  console.log(req.body);
   const { username, password } = req.body;
   // 处理: 判断是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
   // 查询(根据username)
@@ -146,7 +141,6 @@ router.post('/schooladmin_updatepassword', (req, res) => {
 // 添加学校
 router.post('/manage/school/add', (req, res) => {
   // 读取请求参数数据
-  console.log(req.body);
   const { school_name } = req.body;
 
   // const { username, password } = req.body;
@@ -180,7 +174,7 @@ router.get('/manage/school/list', (req, res) => {
   const {pageNum, pageSize} = req.query;
   SchoolModel.find()
     .then((school) => {
-      console.log(school);
+      // console.log(school);
       res.send({status: 0, data: pageFilter(school, pageNum, pageSize)});
     })
     .catch(error => {
@@ -192,9 +186,7 @@ router.get('/manage/school/list', (req, res) => {
 // 更新学校信息
 router.post('/manage/school/update', (req, res) => {
   // 读取请求参数数据
-  console.log('777', req.body);
   const { schoolObj, schoolId } = req.body; 
-  console.log(schoolObj, schoolId);
   // 处理: 判断是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
   // 查询(根据username)
   SchoolModel.updateOne({'_id': schoolId},{$set:schoolObj})
@@ -202,6 +194,19 @@ router.post('/manage/school/update', (req, res) => {
     .catch(error => {
       console.error('修改异常', error);
       res.send({status: 1, msg: '修改学校信息异常, 请重新尝试！'});
+    });
+});
+
+// 删除学校信息
+router.post('/manage/school/delete', (req, res) => {
+  const {schoolId} = req.body;
+  // console.log(req.body);
+  // console.log(schoolId);
+  SchoolModel.deleteOne({_id: schoolId})
+    .then(res.send({status: 0}))
+    .catch(error => {
+      console.error('删除异常', error);
+      res.send({status: 1, msg: '删除学校信息异常, 请重新尝试！'});
     });
 });
 
