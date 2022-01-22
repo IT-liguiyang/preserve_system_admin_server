@@ -4,11 +4,13 @@
 const express = require('express');
 const md5 = require('blueimp-md5');
 
+const SCHOOL_LIST = require('../public/static/school-list');
+
 const SchoolAdminModel = require('../models/SchoolAdminModel');
 const SystemAdminModel = require('../models/SystemAdminModel');
 const SchoolModel = require('../models/SchoolModel');
 const RoleModel = require('../models/RoleModel');
-  
+
 // 得到路由器对象
 const router = express.Router();
 // console.log('router', router)
@@ -207,6 +209,28 @@ router.post('/manage/school/delete', (req, res) => {
     .catch(error => {
       console.error('删除异常', error);
       res.send({status: 1, msg: '删除学校信息异常, 请重新尝试！'});
+    });
+});
+
+// 搜索产品列表
+router.get('/manage/school/search', (req, res) => {
+  console.log(req.query);
+  const {pageNum, pageSize, schoolName, schoolDistrict} = req.query;
+  let contition = {};
+  if (schoolName) {
+    contition = {school_name: new RegExp(`^.*${schoolName}.*$`)};
+  } else if (schoolDistrict) {
+    // 将区域名转换为区域编号再进行搜索
+    const schoolObj = SCHOOL_LIST.find( schoolObj => schoolDistrict == schoolObj.label ) || {};
+    contition = {district: new RegExp(`^.*${schoolObj.value}.*$`)};
+  }
+  SchoolModel.find(contition)
+    .then(schools => {
+      res.send({status: 0, data: pageFilter(schools, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索学校列表异常', error);
+      res.send({status: 1, msg: '搜索学校列表异常, 请重新尝试'});
     });
 });
 
