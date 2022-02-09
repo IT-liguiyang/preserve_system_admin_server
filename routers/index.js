@@ -9,14 +9,11 @@ const SCHOOL_LIST = require('../public/static/school-list');
 const SchoolAdminModel = require('../models/SchoolAdminModel');
 const SystemAdminModel = require('../models/SystemAdminModel');
 const SchoolModel = require('../models/SchoolModel');
+const AnnouncementModel = require('../models/AnnouncementModel');
 const RoleModel = require('../models/RoleModel');
 
 // 得到路由器对象
 const router = express.Router();
-// console.log('router', router)
-
-// 指定需要过滤的属性
-// const filter = {password: 0, __v: 0}
 
 // 登陆
 router.post('/login', (req, res) => {
@@ -81,6 +78,10 @@ router.post('/login', (req, res) => {
   }
 });
 
+/**
+ * 学校管理员管理
+ */
+// #region 
 // 添加学校管理员
 router.post('/schooladmin_register', (req, res) => {
   // 读取请求参数数据
@@ -139,7 +140,12 @@ router.post('/schooladmin_updatepassword', (req, res) => {
       res.send({status: 1, msg: '添加学校管理员异常, 请重新尝试！'});
     });
 });
+//#endregion
 
+/**
+ * 学校管理
+ */
+// #region 
 // 添加学校
 router.post('/manage/school/add', (req, res) => {
   // 读取请求参数数据
@@ -212,7 +218,7 @@ router.post('/manage/school/delete', (req, res) => {
     });
 });
 
-// 搜索产品列表
+// 搜索学校列表
 router.get('/manage/school/search', (req, res) => {
   console.log(req.query);
   const {pageNum, pageSize, schoolName, schoolDistrict} = req.query;
@@ -233,6 +239,83 @@ router.get('/manage/school/search', (req, res) => {
       res.send({status: 1, msg: '搜索学校列表异常, 请重新尝试'});
     });
 });
+// #endregion
+
+/**
+ * 公告模块
+ */
+// #region 
+// 添加公告
+router.post('/manage/announcement/add', (req, res) => {
+  AnnouncementModel.create({...req.body}).then(
+    res.send({status: 0, msg: '添加成功'})
+  ).catch(error => {
+    console.error('添加公告异常', error);
+    res.send({status: 1, msg: '添加公告异常, 请重新尝试！'});
+  });
+});
+
+// 获取公告列表
+router.get('/manage/announcement/list', (req, res) => {
+  const {pageNum, pageSize} = req.query;
+  // 查询并根据发布时间进行排序
+  AnnouncementModel.find().sort({'pub_time':-1})
+    .then((announcement) => {
+      // console.log(announcement);
+      res.send({status: 0, data: pageFilter(announcement, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取公告列表异常', error);
+      res.send({status: 1, msg: '获取公告列表异常, 请重新尝试'});
+    });
+});
+
+// 更新公告信息
+router.post('/manage/announcement/update', (req, res) => {
+  // 读取请求参数数据
+  const { announcementObj, announcementId } = req.body; 
+  // 查询(根据_id)
+  AnnouncementModel.updateOne({'_id': announcementId},{$set:announcementObj})
+    .then(res.send({status: 0, msg: '修改公告信息成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改公告信息异常, 请重新尝试！'});
+    });
+});
+
+// 删除学校信息
+router.post('/manage/announcement/delete', (req, res) => {
+  const {announcementId} = req.body;
+  // console.log(req.body);
+  // console.log(announcementId);
+  AnnouncementModel.deleteOne({_id: announcementId})
+    .then(res.send({status: 0}))
+    .catch(error => {
+      console.error('删除异常', error);
+      res.send({status: 1, msg: '删除公告信息异常, 请重新尝试！'});
+    });
+});
+
+// 搜索产品列表
+router.get('/manage/announcement/search', (req, res) => {
+  console.log(req.query);
+  const {pageNum, pageSize, announcementTheme, announcementPublisher} = req.query;
+  let contition = {};
+  if (announcementTheme) {
+    contition = {pub_theme: new RegExp(`^.*${announcementTheme}.*$`)};
+  } else if (announcementPublisher) {
+    contition = {publisher: new RegExp(`^.*${announcementPublisher}.*$`)};
+  }
+  AnnouncementModel.find(contition)
+    .then(announcements => {
+      res.send({status: 0, data: pageFilter(announcements, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索公告列表异常', error);
+      res.send({status: 1, msg: '搜索公告列表异常, 请重新尝试'});
+    });
+});
+// #endregion
 
 /*
 得到指定数组的分页信息对象
