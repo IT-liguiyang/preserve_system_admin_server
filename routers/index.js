@@ -10,6 +10,7 @@ const SchoolAdminModel = require('../models/SchoolAdminModel');
 const SystemAdminModel = require('../models/SystemAdminModel');
 const SchoolModel = require('../models/SchoolModel');
 const AnnouncementModel = require('../models/AnnouncementModel');
+const NewsModel = require('../models/NewsModel');
 const RoleModel = require('../models/RoleModel');
 
 // 得到路由器对象
@@ -317,6 +318,80 @@ router.get('/manage/announcement/search', (req, res) => {
 });
 // #endregion
 
+/**
+ * 新闻模块
+ */
+// #region 
+// 添加新闻
+router.post('/manage/news/add', (req, res) => {
+  NewsModel.create({...req.body}).then(
+    res.send({status: 0, msg: '添加成功'})
+  ).catch(error => {
+    console.error('添加新闻异常', error);
+    res.send({status: 1, msg: '添加新闻异常, 请重新尝试！'});
+  });
+});
+
+// 获取公告列表
+router.get('/manage/news/list', (req, res) => {
+  const {pageNum, pageSize} = req.query;
+  // 查询并根据发布时间进行排序
+  NewsModel.find().sort({'pub_time':-1})
+    .then((news) => {
+      // console.log(news);
+      res.send({status: 0, data: pageFilter(news, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取新闻列表异常', error);
+      res.send({status: 1, msg: '获取新闻列表异常, 请重新尝试'});
+    });
+});
+
+// 更新公告信息
+router.post('/manage/news/update', (req, res) => {
+  // 读取请求参数数据
+  const { newsObj, newsId } = req.body; 
+  // 查询(根据_id)
+  NewsModel.updateOne({'_id': newsId},{$set:newsObj})
+    .then(res.send({status: 0, msg: '修改新闻信息成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改新闻信息异常, 请重新尝试！'});
+    });
+});
+
+// 删除学校信息
+router.post('/manage/news/delete', (req, res) => {
+  const {newsId} = req.body;
+  // console.log(req.body);
+  NewsModel.deleteOne({_id: newsId})
+    .then(res.send({status: 0}))
+    .catch(error => {
+      console.error('删除异常', error);
+      res.send({status: 1, msg: '删除新闻信息异常, 请重新尝试！'});
+    });
+});
+
+// 搜索产品列表
+router.get('/manage/news/search', (req, res) => {
+  console.log(req.query);
+  const {pageNum, pageSize, newsTheme, newsPublisher} = req.query;
+  let contition = {};
+  if (newsTheme) {
+    contition = {pub_theme: new RegExp(`^.*${newsTheme}.*$`)};
+  } else if (newsPublisher) {
+    contition = {publisher: new RegExp(`^.*${newsPublisher}.*$`)};
+  }
+  NewsModel.find(contition)
+    .then(news => {
+      res.send({status: 0, data: pageFilter(news, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索新闻列表异常', error);
+      res.send({status: 1, msg: '搜索新闻列表异常, 请重新尝试'});
+    });
+});
+// #endregion
 /*
 得到指定数组的分页信息对象
  */
