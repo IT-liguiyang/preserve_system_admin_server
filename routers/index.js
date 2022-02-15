@@ -11,6 +11,8 @@ const SystemAdminModel = require('../models/SystemAdminModel');
 const SchoolModel = require('../models/SchoolModel');
 const AnnouncementModel = require('../models/AnnouncementModel');
 const NewsModel = require('../models/NewsModel');
+const DynamicSharingModel = require('../models/DynamicSharingModel');
+const OpinionsSuggestionsModel = require('../models/OpinionsSuggestionsModel');
 const RoleModel = require('../models/RoleModel');
 
 // 得到路由器对象
@@ -332,7 +334,7 @@ router.post('/manage/news/add', (req, res) => {
   });
 });
 
-// 获取公告列表
+// 获取新闻列表
 router.get('/manage/news/list', (req, res) => {
   const {pageNum, pageSize} = req.query;
   // 查询并根据发布时间进行排序
@@ -347,7 +349,7 @@ router.get('/manage/news/list', (req, res) => {
     });
 });
 
-// 更新公告信息
+// 更新新闻信息
 router.post('/manage/news/update', (req, res) => {
   // 读取请求参数数据
   const { newsObj, newsId } = req.body; 
@@ -360,7 +362,7 @@ router.post('/manage/news/update', (req, res) => {
     });
 });
 
-// 删除学校信息
+// 删除新闻信息
 router.post('/manage/news/delete', (req, res) => {
   const {newsId} = req.body;
   // console.log(req.body);
@@ -372,7 +374,7 @@ router.post('/manage/news/delete', (req, res) => {
     });
 });
 
-// 搜索产品列表
+// 搜索新闻列表
 router.get('/manage/news/search', (req, res) => {
   console.log(req.query);
   const {pageNum, pageSize, newsTheme, newsPublisher} = req.query;
@@ -392,6 +394,157 @@ router.get('/manage/news/search', (req, res) => {
     });
 });
 // #endregion
+
+/**
+ * 动态分享模块
+ */
+// #region 
+// 添加动态分享
+router.post('/manage/dynamic_sharing/add', (req, res) => {
+  DynamicSharingModel.create({...req.body}).then(
+    res.send({status: 0, msg: '添加成功'})
+  ).catch(error => {
+    console.error('添加动态分享异常', error);
+    res.send({status: 1, msg: '添加动态分享异常, 请重新尝试！'});
+  });
+});
+
+// 获取动态分享列表
+router.get('/manage/dynamic_sharing/list', (req, res) => {
+  const {pageNum, pageSize} = req.query;
+  // 查询并根据发布时间进行排序
+  DynamicSharingModel.find().sort({'pub_time':-1})
+    .then((dynamic_sharings) => {
+      // console.log(dynamic_sharings);
+      res.send({status: 0, data: pageFilter(dynamic_sharings, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取动态分享列表异常', error);
+      res.send({status: 1, msg: '获取动态分享列表异常, 请重新尝试'});
+    });
+});
+
+// 更新动态分享信息
+router.post('/manage/dynamic_sharing/update', (req, res) => {
+  // 读取请求参数数据
+  const { dynamic_sharingObj, dynamic_sharingId } = req.body; 
+  // 查询(根据_id)
+  DynamicSharingModel.updateOne({'_id':dynamic_sharingId},{$set:dynamic_sharingObj})
+    .then(res.send({status: 0, msg: '修改动态分享信息成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改动态分享信息异常, 请重新尝试！'});
+    });
+});
+
+// 删除动态分享信息
+router.post('/manage/dynamic_sharing/delete', (req, res) => {
+  const {dynamic_sharingId} = req.body;
+  // console.log(req.body);
+  DynamicSharingModel.deleteOne({_id: dynamic_sharingId})
+    .then(res.send({status: 0}))
+    .catch(error => {
+      console.error('删除异常', error);
+      res.send({status: 1, msg: '删除动态分享信息异常, 请重新尝试！'});
+    });
+});
+
+// 搜索动态分享列表
+router.get('/manage/dynamic_sharing/search', (req, res) => {
+  console.log(req.query);
+  const {pageNum, pageSize, dynamic_sharingTheme, dynamic_sharingPublisher} = req.query;
+  let contition = {};
+  if (dynamic_sharingTheme) {
+    contition = {pub_theme: new RegExp(`^.*${dynamic_sharingTheme}.*$`)};
+  } else if (dynamic_sharingPublisher) {
+    contition = {publisher: new RegExp(`^.*${dynamic_sharingPublisher}.*$`)};
+  }
+  DynamicSharingModel.find(contition)
+    .then(dynamic_sharing => {
+      res.send({status: 0, data: pageFilter(dynamic_sharing, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索动态分享列表异常', error);
+      res.send({status: 1, msg: '搜索动态分享列表异常, 请重新尝试'});
+    });
+});
+// #endregion
+
+/**
+ * 意见建议模块
+ */
+// #region 
+// 添加意见建议
+router.post('/manage/opinions_suggestions/add', (req, res) => {
+  OpinionsSuggestionsModel.create({...req.body}).then(
+    res.send({status: 0, msg: '添加成功'})
+  ).catch(error => {
+    console.error('添加意见建议异常', error);
+    res.send({status: 1, msg: '添加意见建议异常, 请重新尝试！'});
+  });
+});
+
+// 获取意见建议列表
+router.get('/manage/opinions_suggestions/list', (req, res) => {
+  const {pageNum, pageSize} = req.query;
+  // 查询并根据发布时间进行排序
+  OpinionsSuggestionsModel.find().sort({'pub_time':-1})
+    .then((opinions_suggestions) => {
+      // console.log(news);
+      res.send({status: 0, data: pageFilter(opinions_suggestions, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取意见建议列表异常', error);
+      res.send({status: 1, msg: '获取意见建议列表异常, 请重新尝试'});
+    });
+});
+
+// 更新意见建议信息
+router.post('/manage/opinions_suggestions/update', (req, res) => {
+  // 读取请求参数数据
+  const { opinions_suggestionsObj, opinions_suggestionsId } = req.body; 
+  // 查询(根据_id)
+  OpinionsSuggestionsModel.updateOne({'_id': opinions_suggestionsId},{$set:opinions_suggestionsObj})
+    .then(res.send({status: 0, msg: '修改意见建议信息成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改意见建议信息异常, 请重新尝试！'});
+    });
+});
+
+// 删除意见建议信息
+router.post('/manage/opinions_suggestions/delete', (req, res) => {
+  const {opinions_suggestionsId} = req.body;
+  // console.log(req.body);
+  OpinionsSuggestionsModel.deleteOne({_id: opinions_suggestionsId})
+    .then(res.send({status: 0}))
+    .catch(error => {
+      console.error('删除异常', error);
+      res.send({status: 1, msg: '删除意见建议信息异常, 请重新尝试！'});
+    });
+});
+
+// 搜索意见建议列表
+router.get('/manage/opinions_suggestions/search', (req, res) => {
+  console.log(req.query);
+  const {pageNum, pageSize, opinions_suggestionsTheme, opinions_suggestionsPublisher} = req.query;
+  let contition = {};
+  if (opinions_suggestionsTheme) {
+    contition = {pub_theme: new RegExp(`^.*${opinions_suggestionsTheme}.*$`)};
+  } else if (opinions_suggestionsPublisher) {
+    contition = {publisher: new RegExp(`^.*${opinions_suggestionsPublisher}.*$`)};
+  }
+  OpinionsSuggestionsModel.find(contition)
+    .then(opinions_suggestions => {
+      res.send({status: 0, data: pageFilter(opinions_suggestions, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索意见建议列表异常', error);
+      res.send({status: 1, msg: '搜索意见建议列表异常, 请重新尝试'});
+    });
+});
+// #endregion
+
 /*
 得到指定数组的分页信息对象
  */
