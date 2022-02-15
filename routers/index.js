@@ -532,7 +532,7 @@ router.get('/manage/opinions_suggestions/search', (req, res) => {
   if (opinions_suggestionsTheme) {
     contition = {pub_theme: new RegExp(`^.*${opinions_suggestionsTheme}.*$`)};
   } else if (opinions_suggestionsPublisher) {
-    contition = {publisher: new RegExp(`^.*${opinions_suggestionsPublisher}.*$`)};
+    contition = {pub_realname: new RegExp(`^.*${opinions_suggestionsPublisher}.*$`)};
   }
   OpinionsSuggestionsModel.find(contition)
     .then(opinions_suggestions => {
