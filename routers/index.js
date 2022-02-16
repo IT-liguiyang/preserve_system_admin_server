@@ -14,6 +14,7 @@ const NewsModel = require('../models/NewsModel');
 const DynamicSharingModel = require('../models/DynamicSharingModel');
 const OpinionsSuggestionsModel = require('../models/OpinionsSuggestionsModel');
 const ReservationInfoModel = require('../models/ReservationInfoModel');
+const UserModel = require('../models/UserModel');
 const RoleModel = require('../models/RoleModel');
 
 // 得到路由器对象
@@ -618,6 +619,101 @@ router.get('/manage/reservation_info/search', (req, res) => {
     .catch(error => {
       console.error('搜索预约信息列表异常', error);
       res.send({status: 1, msg: '搜索预约信息列表异常, 请重新尝试'});
+    });
+});
+// #endregion
+
+/**
+ * 用户模块
+ */
+// #region 
+// 添加用户
+router.post('/manage/user/add', (req, res) => {
+  // 读取请求参数数据
+  const { username, password } = req.body;
+
+  // 处理: 判断是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
+  // 查询(根据username)
+  UserModel.findOne({username})
+    .then(user => {
+      // 如果user有值(已存在)
+      if (user) {
+        // 返回提示错误的信息
+        res.send({status: 1, msg: '此账户已存在，请重新输入！'});
+        return new Promise(() => {
+        });
+      } else { // 没值(不存在)
+        return UserModel.create({...req.body, password: md5(password)});
+      }
+    })
+    .then(user => {
+      // 返回包含user的json数据
+      res.send({status: 0, data: user});
+    })
+    .catch(error => {
+      console.error('注册异常', error);
+      res.send({status: 1, msg: '添加用户异常, 请重新尝试！'});
+    });
+});
+
+// 获取用户列表
+router.get('/manage/user/list', (req, res) => {
+  const {pageNum, pageSize} = req.query;
+  // 查询并根据发布时间进行排序
+  // ReservationInfoModel.find().sort({'pub_time':-1})
+  UserModel.find()
+    .then((user) => {
+    // console.log(news);
+      res.send({status: 0, data: pageFilter(user, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取用户列表异常', error);
+      res.send({status: 1, msg: '获取用户列表异常, 请重新尝试'});
+    });
+});
+
+// 更新用户信息
+router.post('/manage/user/update', (req, res) => {
+  // 读取请求参数数据
+  const { userObj, userId } = req.body; 
+  // 查询(根据_id)
+  UserModel.updateOne({'_id': userId},{$set:userObj})
+    .then(res.send({status: 0, msg: '修改用户信息成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改用户信息异常, 请重新尝试！'});
+    });
+});
+
+// 删除用户信息
+router.post('/manage/user/delete', (req, res) => {
+  const {userId} = req.body;
+  // console.log(req.body);
+  UserModel.deleteOne({_id: userId})
+    .then(res.send({status: 0}))
+    .catch(error => {
+      console.error('删除异常', error);
+      res.send({status: 1, msg: '删除用户信息异常, 请重新尝试！'});
+    });
+});
+
+// 搜索用户列表
+router.get('/manage/user/search', (req, res) => {
+  console.log(req.query);
+  const {pageNum, pageSize, username, realname} = req.query;
+  let contition = {};
+  if (username) { // 按账号搜索
+    contition = {username: new RegExp(`^.*${username}.*$`)};
+  } else if (realname) {  // 按预约姓名搜索
+    contition = {realname: new RegExp(`^.*${realname}.*$`)};
+  }
+  UserModel.find(contition)
+    .then(user => {
+      res.send({status: 0, data: pageFilter(user, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索用户列表异常', error);
+      res.send({status: 1, msg: '搜索用户列表异常, 请重新尝试'});
     });
 });
 // #endregion
