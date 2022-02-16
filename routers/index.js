@@ -13,6 +13,7 @@ const AnnouncementModel = require('../models/AnnouncementModel');
 const NewsModel = require('../models/NewsModel');
 const DynamicSharingModel = require('../models/DynamicSharingModel');
 const OpinionsSuggestionsModel = require('../models/OpinionsSuggestionsModel');
+const ReservationInfoModel = require('../models/ReservationInfoModel');
 const RoleModel = require('../models/RoleModel');
 
 // 得到路由器对象
@@ -541,6 +542,82 @@ router.get('/manage/opinions_suggestions/search', (req, res) => {
     .catch(error => {
       console.error('搜索意见建议列表异常', error);
       res.send({status: 1, msg: '搜索意见建议列表异常, 请重新尝试'});
+    });
+});
+// #endregion
+
+/**
+ * 预约信息模块
+ */
+// #region 
+// 添加预约信息
+router.post('/manage/reservation_info/add', (req, res) => {
+  ReservationInfoModel.create({...req.body}).then(
+    res.send({status: 0, msg: '添加成功'})
+  ).catch(error => {
+    console.error('添加预约信息异常', error);
+    res.send({status: 1, msg: '添加预约信息异常, 请重新尝试！'});
+  });
+});
+
+// 获取预约信息列表
+router.get('/manage/reservation_info/list', (req, res) => {
+  const {pageNum, pageSize} = req.query;
+  // 查询并根据发布时间进行排序
+  // ReservationInfoModel.find().sort({'pub_time':-1})
+  ReservationInfoModel.find()
+    .then((reservation_info) => {
+    // console.log(news);
+      res.send({status: 0, data: pageFilter(reservation_info, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取预约信息列表异常', error);
+      res.send({status: 1, msg: '获取预约信息列表异常, 请重新尝试'});
+    });
+});
+
+// 更新预约信息信息
+router.post('/manage/reservation_info/update', (req, res) => {
+  // 读取请求参数数据
+  const { reservation_infoObj, reservation_infoId } = req.body; 
+  // 查询(根据_id)
+  ReservationInfoModel.updateOne({'_id': reservation_infoId},{$set:reservation_infoObj})
+    .then(res.send({status: 0, msg: '修改预约信息成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改预约信息异常, 请重新尝试！'});
+    });
+});
+
+// 删除预约信息信息
+router.post('/manage/reservation_info/delete', (req, res) => {
+  const {reservation_infoId} = req.body;
+  // console.log(req.body);
+  ReservationInfoModel.deleteOne({_id: reservation_infoId})
+    .then(res.send({status: 0}))
+    .catch(error => {
+      console.error('删除异常', error);
+      res.send({status: 1, msg: '删除预约信息信息异常, 请重新尝试！'});
+    });
+});
+
+// 搜索预约信息列表
+router.get('/manage/reservation_info/search', (req, res) => {
+  console.log(req.query);
+  const {pageNum, pageSize, reservation_info_School, reservation_info_Name} = req.query;
+  let contition = {};
+  if (reservation_info_School) { // 按已约学校搜索
+    contition = {res_school: new RegExp(`^.*${reservation_info_School}.*$`)};
+  } else if (reservation_info_Name) {  // 按预约姓名搜索
+    contition = {res_realname: new RegExp(`^.*${reservation_info_Name}.*$`)};
+  }
+  ReservationInfoModel.find(contition)
+    .then(reservation_info => {
+      res.send({status: 0, data: pageFilter(reservation_info, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索预约信息列表异常', error);
+      res.send({status: 1, msg: '搜索预约信息列表异常, 请重新尝试'});
     });
 });
 // #endregion
