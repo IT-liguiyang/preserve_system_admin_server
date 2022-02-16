@@ -84,7 +84,7 @@ router.post('/login', (req, res) => {
 });
 
 /**
- * 学校管理员管理
+ * 登录注册管理
  */
 // #region 
 // 添加学校管理员
@@ -714,6 +714,196 @@ router.get('/manage/user/search', (req, res) => {
     .catch(error => {
       console.error('搜索用户列表异常', error);
       res.send({status: 1, msg: '搜索用户列表异常, 请重新尝试'});
+    });
+});
+// #endregion
+
+/**
+ * 学校管理员模块
+ */
+// #region 
+// 添加学校管理员
+router.post('/manage/school_admin/add', (req, res) => {
+  // 读取请求参数数据
+  const { username, password } = req.body;
+
+  // 处理: 判断是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
+  // 查询(根据username)
+  SchoolAdminModel.findOne({username})
+    .then(school_admin => {
+      // 如果school_admin有值(已存在)
+      if (school_admin) {
+        // 返回提示错误的信息
+        res.send({status: 1, msg: '此学校管理员已存在，请重新输入！'});
+        return new Promise(() => {
+        });
+      } else { // 没值(不存在)
+        return SchoolAdminModel.create({...req.body, password: md5(password)});
+      }
+    })
+    .then(school_admin => {
+      // 返回包含school_admin的json数据
+      res.send({status: 0, data: school_admin});
+    })
+    .catch(error => {
+      console.error('注册异常', error);
+      res.send({status: 1, msg: '添加学校管理员异常, 请重新尝试！'});
+    });
+});
+
+// 获取学校管理员列表
+router.get('/manage/school_admin/list', (req, res) => {
+  const {pageNum, pageSize} = req.query;
+  // 查询并根据发布时间进行排序
+  // ReservationInfoModel.find().sort({'pub_time':-1})
+  SchoolAdminModel.find()
+    .then((school_admin) => {
+    // console.log(news);
+      res.send({status: 0, data: pageFilter(school_admin, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取学校管理员列表异常', error);
+      res.send({status: 1, msg: '获取学校管理员列表异常, 请重新尝试'});
+    });
+});
+
+// 更新学校管理员信息
+router.post('/manage/school_admin/update', (req, res) => {
+  // 读取请求参数数据
+  const { school_adminObj, school_adminId, password } = req.body; 
+  // 查询(根据_id)
+  SchoolAdminModel.updateOne({'_id': school_adminId},{$set:{...school_adminObj, password: md5(password)}})
+    .then(res.send({status: 0, msg: '修改学校管理员信息成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改学校管理员信息异常, 请重新尝试！'});
+    });
+});
+
+// 删除学校管理员信息
+router.post('/manage/school_admin/delete', (req, res) => {
+  const {school_adminId} = req.body;
+  // console.log(req.body);
+  SchoolAdminModel.deleteOne({_id: school_adminId})
+    .then(res.send({status: 0}))
+    .catch(error => {
+      console.error('删除异常', error);
+      res.send({status: 1, msg: '删除学校管理员信息异常, 请重新尝试！'});
+    });
+});
+
+// 搜索学校管理员列表
+router.get('/manage/school_admin/search', (req, res) => {
+  console.log(req.query);
+  const {pageNum, pageSize, school_name, realname} = req.query;
+  let contition = {};
+  if (school_name) { // 按学校搜索
+    contition = {school_name: new RegExp(`^.*${school_name}.*$`)};
+  } else if (realname) {  // 按姓名搜索
+    contition = {realname: new RegExp(`^.*${realname}.*$`)};
+  }
+  SchoolAdminModel.find(contition)
+    .then(school_admin => {
+      res.send({status: 0, data: pageFilter(school_admin, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索学校管理员列表异常', error);
+      res.send({status: 1, msg: '搜索学校管理员列表异常, 请重新尝试'});
+    });
+});
+// #endregion
+
+/**
+ * 系统管理员模块
+ */
+// #region 
+// 添加系统管理员
+router.post('/manage/system_admin/add', (req, res) => {
+  // 读取请求参数数据
+  const { username, password } = req.body;
+
+  // 处理: 判断是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
+  // 查询(根据username)
+  SystemAdminModel.findOne({username})
+    .then(system_admin => {
+      // 如果system_admin有值(已存在)
+      if (system_admin) {
+        // 返回提示错误的信息
+        res.send({status: 1, msg: '此系统管理员已存在，请重新输入！'});
+        return new Promise(() => {
+        });
+      } else { // 没值(不存在)
+        return SystemAdminModel.create({...req.body, password: md5(password)});
+      }
+    })
+    .then(system_admin => {
+      // 返回包含system_admin的json数据
+      res.send({status: 0, data: system_admin});
+    })
+    .catch(error => {
+      console.error('注册异常', error);
+      res.send({status: 1, msg: '添加系统管理员异常, 请重新尝试！'});
+    });
+});
+
+// 获取系统管理员列表
+router.get('/manage/system_admin/list', (req, res) => {
+  const {pageNum, pageSize} = req.query;
+  // 查询并根据发布时间进行排序
+  // ReservationInfoModel.find().sort({'pub_time':-1})
+  SystemAdminModel.find()
+    .then((system_admin) => {
+    // console.log(news);
+      res.send({status: 0, data: pageFilter(system_admin, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取系统管理员列表异常', error);
+      res.send({status: 1, msg: '获取系统管理员列表异常, 请重新尝试'});
+    });
+});
+
+// 更新系统管理员信息
+router.post('/manage/system_admin/update', (req, res) => {
+  // 读取请求参数数据
+  const { system_adminObj, system_adminId, password } = req.body; 
+  // 查询(根据_id)
+  SystemAdminModel.updateOne({'_id': system_adminId},{$set:{...system_adminObj, password: md5(password)}})
+    .then(res.send({status: 0, msg: '修改系统管理员信息成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改系统管理员信息异常, 请重新尝试！'});
+    });
+});
+
+// 删除系统管理员信息
+router.post('/manage/system_admin/delete', (req, res) => {
+  const {system_adminId} = req.body;
+  // console.log(req.body);
+  SystemAdminModel.deleteOne({_id: system_adminId})
+    .then(res.send({status: 0}))
+    .catch(error => {
+      console.error('删除异常', error);
+      res.send({status: 1, msg: '删除系统管理员信息异常, 请重新尝试！'});
+    });
+});
+
+// 搜索系统管理员列表
+router.get('/manage/system_admin/search', (req, res) => {
+  console.log(req.query);
+  const {pageNum, pageSize, username, realname} = req.query;
+  let contition = {};
+  if (username) { // 按账号搜索
+    contition = {username: new RegExp(`^.*${username}.*$`)};
+  } else if (realname) {  // 按预约姓名搜索
+    contition = {realname: new RegExp(`^.*${realname}.*$`)};
+  }
+  SystemAdminModel.find(contition)
+    .then(system_admin => {
+      res.send({status: 0, data: pageFilter(system_admin, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索系统管理员列表异常', error);
+      res.send({status: 1, msg: '搜索系统管理员列表异常, 请重新尝试'});
     });
 });
 // #endregion

@@ -10,7 +10,7 @@ const schooladminSchema = new mongoose.Schema({
   username: {type: String, required: true}, // 用户名（手机号）
   password: {type: String, required: true}, // 密码
   realname: String, // 姓名
-  // school_name: String, // 学校名称
+  school_name: String, // 学校名称
   school: Array, // 学校标识码['区编号', '学校代码']
   ID_number:String, // 身份证号
   role_id: String,

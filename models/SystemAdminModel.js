@@ -7,10 +7,11 @@ const mongoose = require('mongoose');
 
 // // 2.字义Schema(描述文档结构)
 const systemAdminSchema = new mongoose.Schema({
+  realname: String, // 姓名
   username: {type: String, required: true}, // 用户名
   password: {type: String, required: true}, // 密码
-  create_time: {type: Number, default: new Date()},
-  role_id: String
+  role_id: String,
+  create_time: {type: Number, default: new Date()}
 });
 
 // 3. 定义Model(与集合对应, 可以操作集合)
