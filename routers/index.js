@@ -21,28 +21,19 @@ const router = express.Router();
 
 // 登陆
 router.post('/login', (req, res) => {
-  const { username, password, admin_role } = req.body;
-  console.log(username, password, admin_role);
+  const { username, password, role_id } = req.body;
+  console.log(username, password, role_id);
 
   // 根据username和password查询数据库users, 如果没有, 返回提示错误的信息, 如果有, 返回登陆成功信息
-  if(admin_role === '1'){
+  if(role_id === '1'){
     SystemAdminModel.findOne({username, password: md5(password)})
       .then(systemadmin => {
         if (systemadmin) { // 登陆成功
         // 生成一个cookie(systemadminid: systemadmin._id), 并交给浏览器保存
           res.cookie('systemadminid', systemadmin._id, {maxAge: 1000 * 60 * 60 * 24});
-          if (systemadmin.role_id) {
-            SystemAdminModel.findOne({_id: systemadmin.role_id})
-              .then(role => {
-                systemadmin._doc.role = role;
-                console.log('role user', systemadmin);
-                res.send({status: 0, data: systemadmin});
-              });
-          } else {
-            systemadmin._doc.role = {menus: []};
-            // 返回登陆成功信息
-            res.send({status: 0, data: systemadmin});
-          }
+          // 返回登陆成功信息
+          res.send({status: 0, data: systemadmin});
+          
         } else {// 登陆失败
           res.send({status: 1, msg: '用户名或密码不正确!'});
         }
@@ -52,25 +43,15 @@ router.post('/login', (req, res) => {
         res.send({status: 1, msg: '登陆异常, 请重新尝试'});
       });
   }
-  if(admin_role === '2'){
+  if(role_id === '2'){
     console.log('SchoolAdminModel');
     SchoolAdminModel.findOne({username, password: md5(password)})
       .then(schooladmin => {
         if (schooladmin) { // 登陆成功
-        // 生成一个cookie(userid: user._id), 并交给浏览器保存
+          // 生成一个cookie(userid: user._id), 并交给浏览器保存
           res.cookie('schooladminid', schooladmin._id, {maxAge: 1000 * 60 * 60 * 24});
-          if (schooladmin.role_id) {
-            SchoolAdminModel.findOne({_id: schooladmin.role_id})
-              .then(role => {
-                schooladmin._doc.role = role;
-                console.log('role user', schooladmin);
-                res.send({status: 0, data: schooladmin});
-              });
-          } else {
-            schooladmin._doc.role = {menus: []};
-            // 返回登陆成功信息
-            res.send({status: 0, data: schooladmin});
-          }
+          // 返回登陆成功信息
+          res.send({status: 0, data: schooladmin});
         } else {// 登陆失败
           res.send({status: 1, msg: '用户名或密码不正确!'});
         }
@@ -118,31 +99,51 @@ router.post('/schooladmin_register', (req, res) => {
 // 获取当前登录用户的全部信息
 router.get('/get_current_login_admin', (req, res) => {
   // 读取请求参数数据
-  const username = req.query;
-
-  // 查询(根据username)
-  SchoolAdminModel.find(username).then(schooladmin => {
+  const { username, role_id }  = req.query;
+  if (role_id === '1') {
+    // 查询(根据username)
+    SystemAdminModel.find({'username':username}).then(systemadmin => {
+      // 返回包含schooladmin的json数据
+      res.send({status: 0, data: systemadmin});
+    })
+      .catch(error => {
+        console.error('获取异常', error);
+        res.send({status: 1, msg: '获取学校管理员信息异常, 请重新尝试！'});
+      });
+  }else{
+    // 查询(根据username)
+    SchoolAdminModel.find({'username':username}).then(schooladmin => {
     // 返回包含schooladmin的json数据
-    res.send({status: 0, data: schooladmin});
-  })
-    .catch(error => {
-      console.error('注册异常', error);
-      res.send({status: 1, msg: '添加学校管理员异常, 请重新尝试！'});
-    });
+      res.send({status: 0, data: schooladmin});
+    })
+      .catch(error => {
+        console.error('获取异常', error);
+        res.send({status: 1, msg: '添加系统管理员信息异常, 请重新尝试！'});
+      });
+  }
 });
 
 // 修改学校管理员密码
-router.post('/schooladmin_updatepassword', (req, res) => {
+router.post('/update_admin_password', (req, res) => {
   // 读取请求参数数据
-  const { username, password } = req.body;
+  const { username, password, role_id } = req.body;
   // 处理: 判断是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
   // 查询(根据username)
-  SchoolAdminModel.updateOne({username},{$set:{'password':md5(password)}})
-    .then(res.send({status: 0, msg: '修改密码成功！请重新登录，即将跳转到登录页面！'}))
-    .catch(error => {
-      console.error('注册异常', error);
-      res.send({status: 1, msg: '添加学校管理员异常, 请重新尝试！'});
-    });
+  if (role_id === '1'){
+    SystemAdminModel.updateOne({username},{$set:{'password':md5(password)}})
+      .then(res.send({status: 0, msg: '修改密码成功！请重新登录，即将跳转到登录页面！'}))
+      .catch(error => {
+        console.error('注册异常', error);
+        res.send({status: 1, msg: '添加学校管理员异常, 请重新尝试！'});
+      });                                 
+  }else{
+    SchoolAdminModel.updateOne({username},{$set:{'password':md5(password)}})
+      .then(res.send({status: 0, msg: '修改密码成功！请重新登录，即将跳转到登录页面！'}))
+      .catch(error => {
+        console.error('注册异常', error);
+        res.send({status: 1, msg: '添加学校管理员异常, 请重新尝试！'});
+      });
+  }
 });
 //#endregion
 
@@ -769,9 +770,10 @@ router.get('/manage/school_admin/list', (req, res) => {
 // 更新学校管理员信息
 router.post('/manage/school_admin/update', (req, res) => {
   // 读取请求参数数据
-  const { school_adminObj, school_adminId, password } = req.body; 
+  // const { school_adminObj, school_adminId, password } = req.body; 
+  const { school_adminObj, school_adminId } = req.body; 
   // 查询(根据_id)
-  SchoolAdminModel.updateOne({'_id': school_adminId},{$set:{...school_adminObj, password: md5(password)}})
+  SchoolAdminModel.updateOne({'_id': school_adminId},{$set:{...school_adminObj}})
     .then(res.send({status: 0, msg: '修改学校管理员信息成功！'}))
     .catch(error => {
       console.error('修改异常', error);
