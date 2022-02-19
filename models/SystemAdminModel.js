@@ -11,6 +11,9 @@ const systemAdminSchema = new mongoose.Schema({
   username: {type: String, required: true}, // 用户名
   password: {type: String, required: true}, // 密码
   role_id: String,
+  auth_time: String, // 授权时间
+  auth_person: String, // 授权时间
+  auth_menus: Array, // 所有有权限操作的菜单path的数组
   create_time: {type: Number, default: new Date()}
 });
 

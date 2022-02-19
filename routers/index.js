@@ -15,7 +15,6 @@ const DynamicSharingModel = require('../models/DynamicSharingModel');
 const OpinionsSuggestionsModel = require('../models/OpinionsSuggestionsModel');
 const ReservationInfoModel = require('../models/ReservationInfoModel');
 const UserModel = require('../models/UserModel');
-const RoleModel = require('../models/RoleModel');
 
 // 得到路由器对象
 const router = express.Router();
@@ -33,7 +32,7 @@ router.post('/login', (req, res) => {
         // 生成一个cookie(systemadminid: systemadmin._id), 并交给浏览器保存
           res.cookie('systemadminid', systemadmin._id, {maxAge: 1000 * 60 * 60 * 24});
           if (systemadmin.role_id) {
-            RoleModel.findOne({_id: systemadmin.role_id})
+            SystemAdminModel.findOne({_id: systemadmin.role_id})
               .then(role => {
                 systemadmin._doc.role = role;
                 console.log('role user', systemadmin);
@@ -61,7 +60,7 @@ router.post('/login', (req, res) => {
         // 生成一个cookie(userid: user._id), 并交给浏览器保存
           res.cookie('schooladminid', schooladmin._id, {maxAge: 1000 * 60 * 60 * 24});
           if (schooladmin.role_id) {
-            RoleModel.findOne({_id: schooladmin.role_id})
+            SchoolAdminModel.findOne({_id: schooladmin.role_id})
               .then(role => {
                 schooladmin._doc.role = role;
                 console.log('role user', schooladmin);
@@ -907,6 +906,65 @@ router.get('/manage/system_admin/search', (req, res) => {
     });
 });
 // #endregion
+
+/**
+ * 权限管理模块
+ */
+//#region 
+// 获取学校管理员权限列表
+router.get('/manage/role/school_admin/list', (req, res) => {
+  SchoolAdminModel.find()
+    .then(roles => {
+      res.send({status: 0, data: roles});
+    })
+    .catch(error => {
+      console.error('获取权限管理列表异常', error);
+      res.send({status: 1, msg: '获取权限管理列表异常, 请重新尝试'});
+    });
+});
+
+// 更新学校管理员权限(设置权限)
+router.post('/manage/role/school_admin/update', (req, res) => {
+  const role = req.body;
+  // role.auth_time = Date.now();
+  SchoolAdminModel.findOneAndUpdate({_id: role._id}, role)
+    .then(oldRole => {
+      // console.log('---', oldRole._doc)
+      res.send({status: 0, data: {...oldRole._doc, ...role}});
+    })
+    .catch(error => {
+      console.error('更新学校管理员权限异常', error);
+      res.send({status: 1, msg: '更新学校管理员权限异常, 请重新尝试'});
+    });
+});
+
+// 获取权限管理列表
+router.get('/manage/role/system_admin/list', (req, res) => {
+  SystemAdminModel.find()
+    .then(roles => {
+      res.send({status: 0, data: roles});
+    })
+    .catch(error => {
+      console.error('获取权限管理列表异常', error);
+      res.send({status: 1, msg: '获取权限管理列表异常, 请重新尝试'});
+    });
+});
+
+// 更新权限管理(设置权限)
+router.post('/manage/role/system_admin/update', (req, res) => {
+  const role = req.body;
+  // role.auth_time = Date.now();
+  SystemAdminModel.findOneAndUpdate({_id: role._id}, role)
+    .then(oldRole => {
+      // console.log('---', oldRole._doc)
+      res.send({status: 0, data: {...oldRole._doc, ...role}});
+    })
+    .catch(error => {
+      console.error('更新系统管理员权限异常', error);
+      res.send({status: 1, msg: '更新系统管理员权限异常, 请重新尝试'});
+    });
+});
+//#endregion
 
 /*
 得到指定数组的分页信息对象

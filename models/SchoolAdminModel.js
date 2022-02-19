@@ -14,6 +14,9 @@ const schooladminSchema = new mongoose.Schema({
   school: Array, // 学校标识码['区编号', '学校代码']
   ID_number:String, // 身份证号
   role_id: String,
+  auth_time: String, // 授权时间
+  auth_person: String, // 授权时间
+  auth_menus: Array, // 所有有权限操作的菜单path的数组
   create_time: {type: Number, default:new Date()}
 });
 
