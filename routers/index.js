@@ -4,7 +4,7 @@
 const express = require('express');
 const md5 = require('blueimp-md5');
 
-const SCHOOL_LIST = require('../public/static/school-list');
+// const SCHOOL_LIST = require('../public/static/school-list');
 
 const SchoolAdminModel = require('../models/SchoolAdminModel');
 const SystemAdminModel = require('../models/SystemAdminModel');
@@ -154,12 +154,14 @@ router.post('/update_admin_password', (req, res) => {
 // 添加学校
 router.post('/manage/school/add', (req, res) => {
   // 读取请求参数数据
-  const { school_name } = req.body;
+  const { school } = req.body;
+  // const school_name = school[1];
 
-  // const { username, password } = req.body;
+  console.log(school);
+
   // 处理: 判断是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
   // 查询(根据username)
-  SchoolModel.findOne({school_name})
+  SchoolModel.findOne({school})
     .then(school => {
       // 如果school有值(已存在)
       if (school) {
@@ -200,6 +202,7 @@ router.get('/manage/school/list', (req, res) => {
 router.post('/manage/school/update', (req, res) => {
   // 读取请求参数数据
   const { schoolObj, schoolId } = req.body; 
+  console.log(schoolObj, schoolId);
   // 处理: 判断是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
   // 查询(根据username)
   SchoolModel.updateOne({'_id': schoolId},{$set:schoolObj})
@@ -229,11 +232,11 @@ router.get('/manage/school/search', (req, res) => {
   const {pageNum, pageSize, schoolName, schoolDistrict} = req.query;
   let contition = {};
   if (schoolName) {
-    contition = {school_name: new RegExp(`^.*${schoolName}.*$`)};
+    // 按学校名称搜索
+    contition = {school: new RegExp(`^.*${schoolName}.*$`)};  
   } else if (schoolDistrict) {
-    // 将区域名转换为区域编号再进行搜索
-    const schoolObj = SCHOOL_LIST.find( schoolObj => schoolDistrict == schoolObj.label ) || {};
-    contition = {district: new RegExp(`^.*${schoolObj.value}.*$`)};
+    // 按所在区域搜索
+    contition = {school: new RegExp(`^.*${schoolDistrict}.*$`)};
   }
   SchoolModel.find(contition)
     .then(schools => {
@@ -967,6 +970,23 @@ router.post('/manage/role/system_admin/update', (req, res) => {
     });
 });
 //#endregion
+
+/**
+ 通过学校管理员姓名查询学校信息
+ */
+router.post('/manage/school_info_by_username', (req, res) => {
+  // 读取请求参数数据
+  const { realname } = req.body;
+
+  SchoolAdminModel.find({realname: new RegExp(`^.*${realname}.*$`)})
+    .then(school => {
+      res.send({status: 0, data: school});
+    })
+    .catch(error => {
+      console.error('通过学校管理员姓名查询学校信息异常', error);
+      res.send({status: 1, msg: '通过学校管理员姓名查询学校信息异常, 请重新尝试'});
+    });
+});
 
 /*
 得到指定数组的分页信息对象
