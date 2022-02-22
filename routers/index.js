@@ -64,6 +64,94 @@ router.post('/login', (req, res) => {
 });
 
 /**
+ * 获取首页相关信息
+ */
+//#region 
+// 获取各模块数量信息
+router.get('/welcome', async (req, res) => {
+  let numberObj = [];
+  // 获取用户列表长度
+  await UserModel.find().then(users => {
+    numberObj.push({'usersLength':users.length});
+  }).catch(error => {
+    console.error('获取用户列表长度异常', error);
+    res.send({status: 1, msg: '获取用户列表长度异常, 请重新尝试'});
+  });
+  // 获取学校列表长度
+  await SchoolModel.find().then(schools => {
+    numberObj.push({'schoolsLength':schools.length});
+  }).catch(error => {
+    console.error('获取学校列表长度异常', error);
+    res.send({status: 1, msg: '获取学校列表长度异常, 请重新尝试'});
+  });
+  // 获取公告列表长度
+  await AnnouncementModel.find().then(announcements => {
+    numberObj.push({'announcementsLength':announcements.length});
+  }).catch(error => {
+    console.error('获取公告列表长度异常', error);
+    res.send({status: 1, msg: '获取公告列表长度异常, 请重新尝试'});
+  });
+  // 获取新闻列表长度
+  await NewsModel.find().then(news => {
+    numberObj.push({'newsLength':news.length});
+  }).catch(error => {
+    console.error('获取新闻列表长度异常', error);
+    res.send({status: 1, msg: '获取新闻列表长度异常, 请重新尝试'});
+  });
+  // 动态分享列表长度
+  await DynamicSharingModel.find().then(dynamic_sharings => {
+    numberObj.push({'dynamic_sharingsLength':dynamic_sharings.length});
+  }).catch(error => {
+    console.error('获取动态分享列表长度异常', error);
+    res.send({status: 1, msg: '获取动态分享列表长度异常, 请重新尝试'});
+  });
+  // 获取意见建议列表长度
+  await OpinionsSuggestionsModel.find().then(opinions_suggestions => {
+    numberObj.push({'opinions_suggestionsLength':opinions_suggestions.length});
+  }).catch(error => {
+    console.error('获取意见建议列表长度异常', error);
+    res.send({status: 1, msg: '获取意见建议列表长度异常, 请重新尝试'});
+  });
+  // 获取预约信息列表长度
+  await ReservationInfoModel.find().then(reservation_infos => {
+    numberObj.push({'reservation_infosLength':reservation_infos.length});
+  }).catch(error => {
+    console.error('获取预约信息列表长度异常', error);
+    res.send({status: 1, msg: '获取预约信息列表长度异常, 请重新尝试'});
+  });
+  // 获取学校管理员列表长度
+  await SchoolAdminModel.find().then(school_admins => {
+    numberObj.push({'school_adminsLength':school_admins.length});
+  }).catch(error => {
+    console.error('获取学校管理员列表长度异常', error);
+    res.send({status: 1, msg: '获取学校管理员列表长度异常, 请重新尝试'});
+  });
+  // 获取系统管理员列表长度
+  await SystemAdminModel.find().then(system_admins => {
+    numberObj.push({'system_adminsLength':system_admins.length});
+  }).catch(error => {
+    console.error('获取系统管理员列表长度异常', error);
+    res.send({status: 1, msg: '获取系统管理员列表长度异常, 请重新尝试'});
+  });
+  console.log(numberObj);
+  res.send(numberObj);
+});
+
+// 获取系统公告
+// 搜索学校管理员列表
+router.get('/system_announcement', (req, res) => {
+  AnnouncementModel.find({publisher: new RegExp(`^.*${'系统管理员'}.*$`)})
+    .then(announcement => {
+      res.send({status: 0, data: announcement});
+    })
+    .catch(error => {
+      console.error('搜索系统公告列表异常', error);
+      res.send({status: 1, msg: '搜索系统公告列表异常, 请重新尝试'});
+    });
+});
+//#endregion
+
+/**
  * 登录注册管理
  */
 // #region 
