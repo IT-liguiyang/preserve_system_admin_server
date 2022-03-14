@@ -15,6 +15,7 @@ const DynamicSharingModel = require('../models/DynamicSharingModel');
 const OpinionsSuggestionsModel = require('../models/OpinionsSuggestionsModel');
 const ReservationInfoModel = require('../models/ReservationInfoModel');
 const UserModel = require('../models/UserModel');
+const WXBizDataCrypt = require('../config/WXBizDataCrypt');
 
 // 得到路由器对象
 const router = express.Router();
@@ -133,7 +134,6 @@ router.get('/welcome', async (req, res) => {
     console.error('获取系统管理员列表长度异常', error);
     res.send({status: 1, msg: '获取系统管理员列表长度异常, 请重新尝试'});
   });
-  console.log(numberObj);
   res.send(numberObj);
 });
 
@@ -277,7 +277,6 @@ router.get('/manage/school/list', (req, res) => {
   const {pageNum, pageSize} = req.query;
   SchoolModel.find()
     .then((school) => {
-      // console.log(school);
       res.send({status: 0, data: pageFilter(school, pageNum, pageSize)});
     })
     .catch(error => {
@@ -317,7 +316,7 @@ router.post('/manage/school/delete', (req, res) => {
 // 搜索学校列表
 router.get('/manage/school/search', (req, res) => {
   console.log(req.query);
-  const {pageNum, pageSize, schoolName, schoolDistrict} = req.query;
+  const {pageNum, pageSize, schoolName, schoolDistrict, openAreas} = req.query;
   let contition = {};
   if (schoolName) {
     // 按学校名称搜索
@@ -325,6 +324,18 @@ router.get('/manage/school/search', (req, res) => {
   } else if (schoolDistrict) {
     // 按所在区域搜索
     contition = {school: new RegExp(`^.*${schoolDistrict}.*$`)};
+  } else if (openAreas) {
+    // 按所在区域搜索
+    contition = {'open_areas.open_area': new RegExp(`^.*${openAreas}.*$`)};
+    SchoolModel.find(contition)
+      .then(schools => {
+        res.send({status: 0, data: pageFilter(schools, pageNum, pageSize)});
+      })
+      .catch(error => {
+        console.error('搜索学校列表异常', error);
+        res.send({status: 1, msg: '搜索学校列表异常, 请重新尝试'});
+      });
+    return;
   }
   SchoolModel.find(contition)
     .then(schools => {
@@ -1099,6 +1110,45 @@ function pageFilter(arr, pageNum, pageSize) {
     list
   };
 }
+
+// //1.引入
+// var app = new  express();
+// // 处理post接参
+// var bodyParser = require('body-parser');
+// // // parse application/x-www-form-urlencoded 
+// app.use(bodyParser.urlencoded({ extended: false }));
+// // // // parse application/json 
+// app.use(bodyParser.json());
+// //   npm install    supervisor    -g
+// //2.配置路由
+var axios =  require('axios');
+router.post('/getPhoneNumber', async function(req, res) {
+  // console.log(req.body);
+  let { iv,encryptedData,appid,secret,code } = req.body;
+  console.log(iv,encryptedData,appid,secret,code);	
+  // 获取sessionkey
+  // GET https://api.weixin.qq.com/sns/jscode2session?appid=APPID&secret=SECRET&js_code=JSCODE&grant_type=authorization_code
+  // var sessionKey = 'tiihtNczf5v6AKRyjwEUhQ=='; // 服务端要请求数据，获取的
+  let  result = await axios({
+    url:'https://api.weixin.qq.com/sns/jscode2session?appid='+appid+'&secret='+secret+'&js_code='+code+'&grant_type=authorization_code',
+    method:'GET'
+  });
+  // console.log('666', result);
+  console.log(result.data.session_key);
+  var pc = new WXBizDataCrypt(appid, result.data.session_key);
+  var data = pc.decryptData(encryptedData , iv);	
+  // console.log('解密后 data: ', data)
+  res.send({value:data});
+});
+
+// // 小程序获取手机号解密算法
+// router.get('/decode', (req, res) => {
+//   const { appId, sessionKey, encryptedData, iv} = req.body;
+//   const pc = new WXBizDataCrypt(appId, sessionKey);
+
+//   const data = pc.decryptData(encryptedData , iv);
+//   res.send(data);
+// });
 
 require('./file-upload')(router);
 
