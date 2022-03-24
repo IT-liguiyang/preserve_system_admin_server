@@ -15,7 +15,6 @@ const DynamicSharingModel = require('../models/DynamicSharingModel');
 const OpinionsSuggestionsModel = require('../models/OpinionsSuggestionsModel');
 const ReservationInfoModel = require('../models/ReservationInfoModel');
 const UserModel = require('../models/UserModel');
-const WXBizDataCrypt = require('../config/WXBizDataCrypt');
 
 // 得到路由器对象
 const router = express.Router();
@@ -732,7 +731,7 @@ router.get('/manage/reservation_info/search', (req, res) => {
 // 添加用户
 router.post('/manage/user/add', (req, res) => {
   // 读取请求参数数据
-  const { username, password } = req.body;
+  const { username } = req.body;
 
   // 处理: 判断是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
   // 查询(根据username)
@@ -741,11 +740,11 @@ router.post('/manage/user/add', (req, res) => {
       // 如果user有值(已存在)
       if (user) {
         // 返回提示错误的信息
-        res.send({status: 1, msg: '此账户已存在，请重新输入！'});
+        res.send({status: 1, msg: '此账户已存在！'});
         return new Promise(() => {
         });
       } else { // 没值(不存在)
-        return UserModel.create({...req.body, password: md5(password)});
+        return UserModel.create({...req.body});
       }
     })
     .then(user => {
@@ -755,6 +754,21 @@ router.post('/manage/user/add', (req, res) => {
     .catch(error => {
       console.error('注册异常', error);
       res.send({status: 1, msg: '添加用户异常, 请重新尝试！'});
+    });
+});
+
+// 获取指定用户名用户信息
+router.get('/manage/user/current', (req, res) => {
+  const { username } = req.query;
+  console.log(username);
+  // 查询并根据发布时间进行排序
+  UserModel.find({'username':username}).then(user => {
+    // 返回包含user的json数据
+    res.send({status: 0, data: user});
+  })
+    .catch(error => {
+      console.error('获取用户异常', error);
+      res.send({status: 1, msg: '获取用户异常, 请重新尝试'});
     });
 });
 
@@ -776,8 +790,10 @@ router.get('/manage/user/list', (req, res) => {
 
 // 更新用户信息
 router.post('/manage/user/update', (req, res) => {
+  console.log('请求更新用户信息');
   // 读取请求参数数据
-  const { userObj, userId } = req.body; 
+  const { userObj, userId } = req.body;
+  console.log(userObj, userId);
   // 查询(根据_id)
   UserModel.updateOne({'_id': userId},{$set:userObj})
     .then(res.send({status: 0, msg: '修改用户信息成功！'}))
@@ -1110,45 +1126,6 @@ function pageFilter(arr, pageNum, pageSize) {
     list
   };
 }
-
-// //1.引入
-// var app = new  express();
-// // 处理post接参
-// var bodyParser = require('body-parser');
-// // // parse application/x-www-form-urlencoded 
-// app.use(bodyParser.urlencoded({ extended: false }));
-// // // // parse application/json 
-// app.use(bodyParser.json());
-// //   npm install    supervisor    -g
-// //2.配置路由
-var axios =  require('axios');
-router.post('/getPhoneNumber', async function(req, res) {
-  // console.log(req.body);
-  let { iv,encryptedData,appid,secret,code } = req.body;
-  console.log(iv,encryptedData,appid,secret,code);	
-  // 获取sessionkey
-  // GET https://api.weixin.qq.com/sns/jscode2session?appid=APPID&secret=SECRET&js_code=JSCODE&grant_type=authorization_code
-  // var sessionKey = 'tiihtNczf5v6AKRyjwEUhQ=='; // 服务端要请求数据，获取的
-  let  result = await axios({
-    url:'https://api.weixin.qq.com/sns/jscode2session?appid='+appid+'&secret='+secret+'&js_code='+code+'&grant_type=authorization_code',
-    method:'GET'
-  });
-  // console.log('666', result);
-  console.log(result.data.session_key);
-  var pc = new WXBizDataCrypt(appid, result.data.session_key);
-  var data = pc.decryptData(encryptedData , iv);	
-  // console.log('解密后 data: ', data)
-  res.send({value:data});
-});
-
-// // 小程序获取手机号解密算法
-// router.get('/decode', (req, res) => {
-//   const { appId, sessionKey, encryptedData, iv} = req.body;
-//   const pc = new WXBizDataCrypt(appId, sessionKey);
-
-//   const data = pc.decryptData(encryptedData , iv);
-//   res.send(data);
-// });
 
 require('./file-upload')(router);
 

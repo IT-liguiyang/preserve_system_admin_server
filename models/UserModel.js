@@ -8,12 +8,13 @@ const mongoose = require('mongoose');
 // 2.字义Schema(描述文档结构)
 const userSchema = new mongoose.Schema({
   username: {type: String, required: true}, // 用户名（手机号）
-  password: {type: String, required: true}, // 密码
+  // password: {type: String, required: true}, // 密码
+  head_portrait: Array, // 用户头像
   realname: String, // 姓名
   ID_number: String, // 身份证号
   address: String, // 住址
   profession: String, // 职业
-  role_id: String,
+  realname_authentication: String, // 实名认证
   create_time: {type: Number, default:new Date()}
 });
 
