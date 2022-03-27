@@ -7,10 +7,13 @@ const mongoose = require('mongoose');
 
 // 2.字义Schema(描述文档结构)
 const dynamic_sharingSchema = new mongoose.Schema({
-  publisher: String, // 发布人
+  publish_username: String, // 发布人(手机号)
+  publish_realname: String, // 发布人(姓名)
+  publish_avater: Array, // 发布人头像
   pub_time: String, // 发布时间
   pub_content: Array, // 内容
-  like_number: Number, // 点赞人数
+  image_list: Array, // 图片（数组） 
+  love: Array, // 点赞（存放点赞人姓名的数组）
   comment: Array, // 评论（数组）
   create_time: {type: Number, default:new Date()} 
 });

@@ -527,10 +527,40 @@ router.get('/manage/dynamic_sharing/list', (req, res) => {
     });
 });
 
+// 获取动态分享列表
+router.get('/wechat/dynamic_sharing/list', (req, res) => {
+  // 查询并根据发布时间进行排序
+  DynamicSharingModel.find().sort({'pub_time':-1})
+    .then((dynamic_sharings) => {
+      // console.log(dynamic_sharings);
+      res.send({status: 0, data: dynamic_sharings});
+    })
+    .catch(error => {
+      console.error('获取动态分享列表异常', error);
+      res.send({status: 1, msg: '获取动态分享列表异常, 请重新尝试'});
+    });
+});
+
+/**
+ 通过_id查询学校信息动态信息
+ */
+router.post('/manage/dynamic_info_by_id', (req, res) => {
+  // 读取请求参数数据
+  const { dynamic_sharingId } = req.body;
+
+  DynamicSharingModel.find({_id: dynamic_sharingId})
+    .then(dynamic => { res.send({status: 0, data: dynamic});})
+    .catch(error => {
+      console.error('通过id查询学校信息动态信息异常', error);
+      res.send({status: 1, msg: '通过id查询学校信息动态信息异常, 请重新尝试'});
+    });
+});
+
 // 更新动态分享信息
 router.post('/manage/dynamic_sharing/update', (req, res) => {
   // 读取请求参数数据
   const { dynamic_sharingObj, dynamic_sharingId } = req.body; 
+  console.log(dynamic_sharingObj, dynamic_sharingId);
   // 查询(根据_id)
   DynamicSharingModel.updateOne({'_id':dynamic_sharingId},{$set:dynamic_sharingObj})
     .then(res.send({status: 0, msg: '修改动态分享信息成功！'}))
