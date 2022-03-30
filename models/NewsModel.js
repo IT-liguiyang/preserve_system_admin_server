@@ -7,9 +7,11 @@ const mongoose = require('mongoose');
 // 2.字义Schema(描述文档结构)
 const newsSchema = new mongoose.Schema({
   publisher: String, // 发布人
-  pub_time: String, // 发布时间
+  system_pub_time: String, // 系统操作的时间
+  real_pub_time: String, // 原本发布的时间
   pub_theme: String, // 公告主题
   pub_content: Array, // 内容
+  origin: String, // 新闻来源
   create_time: {type: Number, default:new Date()} 
 });
 

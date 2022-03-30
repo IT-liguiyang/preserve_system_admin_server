@@ -325,7 +325,7 @@ router.get('/manage/school/search', (req, res) => {
     contition = {school: new RegExp(`^.*${schoolDistrict}.*$`)};
   } else if (openAreas) {
     // 按所在区域搜索
-    contition = {'open_areas.open_area': new RegExp(`^.*${openAreas}.*$`)};
+    contition = {openAreasInfoStr: new RegExp(`^.*${openAreas}.*$`)};
     SchoolModel.find(contition)
       .then(schools => {
         res.send({status: 0, data: pageFilter(schools, pageNum, pageSize)});
@@ -369,6 +369,21 @@ router.get('/manage/announcement/list', (req, res) => {
     .then((announcement) => {
       // console.log(announcement);
       res.send({status: 0, data: pageFilter(announcement, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取公告列表异常', error);
+      res.send({status: 1, msg: '获取公告列表异常, 请重新尝试'});
+    });
+});
+
+// 获取指定发布者的公告列表
+router.get('/manage/announcement/search_by_publisher', (req, res) => {
+  const {publisher} = req.query;
+  console.log(publisher);
+  // 查询并根据发布时间进行排序
+  AnnouncementModel.find({publisher: publisher}).sort({'pub_time':-1})
+    .then((announcement) => {
+      res.send({status: 0, data: announcement});
     })
     .catch(error => {
       console.error('获取公告列表异常', error);
@@ -441,10 +456,24 @@ router.post('/manage/news/add', (req, res) => {
 router.get('/manage/news/list', (req, res) => {
   const {pageNum, pageSize} = req.query;
   // 查询并根据发布时间进行排序
-  NewsModel.find().sort({'pub_time':-1})
+  NewsModel.find().sort({'real_pub_time':1})
     .then((news) => {
       // console.log(news);
       res.send({status: 0, data: pageFilter(news, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取新闻列表异常', error);
+      res.send({status: 1, msg: '获取新闻列表异常, 请重新尝试'});
+    });
+});
+
+// 小程序获取新闻列表（不带分页）
+router.get('/wechat/news/list', (req, res) => {
+  // 查询并根据发布时间进行排序
+  NewsModel.find().sort({real_pub_time:1})
+    .then((news) => {
+      // console.log(news);
+      res.send({status: 0, data: news});
     })
     .catch(error => {
       console.error('获取新闻列表异常', error);
@@ -487,9 +516,29 @@ router.get('/manage/news/search', (req, res) => {
   } else if (newsPublisher) {
     contition = {publisher: new RegExp(`^.*${newsPublisher}.*$`)};
   }
-  NewsModel.find(contition)
+  NewsModel.find(contition).sort({real_pub_time:1})
     .then(news => {
       res.send({status: 0, data: pageFilter(news, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索新闻列表异常', error);
+      res.send({status: 1, msg: '搜索新闻列表异常, 请重新尝试'});
+    });
+});
+
+// 小程序搜索新闻列表
+router.get('/wechat/news/search', (req, res) => {
+  console.log(req.query);
+  const {newsTheme, newsPublisher} = req.query;
+  let contition = {};
+  if (newsTheme) {
+    contition = {pub_theme: new RegExp(`^.*${newsTheme}.*$`)};
+  } else if (newsPublisher) {
+    contition = {publisher: new RegExp(`^.*${newsPublisher}.*$`)};
+  }
+  NewsModel.find(contition).sort({real_pub_time:1})
+    .then(news => {
+      res.send({status: 0, data: news});
     })
     .catch(error => {
       console.error('搜索新闻列表异常', error);

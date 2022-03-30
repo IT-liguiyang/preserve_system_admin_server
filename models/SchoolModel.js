@@ -8,14 +8,17 @@ const mongoose = require('mongoose');
 // 2.字义Schema(描述文档结构)
 const schoolSchema = new mongoose.Schema({
   school: Array, // 学校标识码['所在区域', '学校名称']
-  telephone: String, // 联系电话
   image: Array, // 学校图片
-  introduce: String, // 学校介绍
+  telephone: String, // 联系电话
   address: String, // 地址
-  traffic_guidance: String, // 交通指引
-  reservation_notice: String, // 预约须知
-  open_areas: Array, // 开放区域
-  open_time: Array, // 开放时间
+  longitude: String, // 经度
+  latitude: String, // 纬度
+  trafficGuidance: String, // 交通指引
+  openTimeInfoStr: String, // 开放时间介绍
+  openAreasInfoStr: String, // 开放区域介绍
+  schoolIntroduce: String, // 学校介绍
+  reservationNotice: String, // 预约须知
+  openBooking: String, // 是否可以预约，'0'：不可以，'1'：可以
   create_time: {type: Number, default:new Date()} 
 });
 
