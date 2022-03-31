@@ -15,6 +15,7 @@ const DynamicSharingModel = require('../models/DynamicSharingModel');
 const OpinionsSuggestionsModel = require('../models/OpinionsSuggestionsModel');
 const ReservationInfoModel = require('../models/ReservationInfoModel');
 const UserModel = require('../models/UserModel');
+const CommonProblemsModel = require('../models/CommonProblemsModel');
 
 // 得到路由器对象
 const router = express.Router();
@@ -576,6 +577,19 @@ router.get('/manage/dynamic_sharing/list', (req, res) => {
     });
 });
 
+// 通过发布人的 publish_username 获取动态分享列表
+router.post('/manage/dynamic_info_by_username', (req, res) => {
+  // 读取请求参数数据
+  const { username } = req.body;
+
+  DynamicSharingModel.find({publish_username: username}).sort({'pub_time':-1})
+    .then(dynamic => { res.send({status: 0, data: dynamic});})
+    .catch(error => {
+      console.error('通过发布人手机号查询动态信息异常', error);
+      res.send({status: 1, msg: '通过发布人手机号查询动态信息异常, 请重新尝试'});
+    });
+});
+
 // 获取动态分享列表
 router.get('/wechat/dynamic_sharing/list', (req, res) => {
   // 查询并根据发布时间进行排序
@@ -591,7 +605,7 @@ router.get('/wechat/dynamic_sharing/list', (req, res) => {
 });
 
 /**
- 通过_id查询学校信息动态信息
+ 通过_id查询动态信息
  */
 router.post('/manage/dynamic_info_by_id', (req, res) => {
   // 读取请求参数数据
@@ -600,8 +614,8 @@ router.post('/manage/dynamic_info_by_id', (req, res) => {
   DynamicSharingModel.find({_id: dynamic_sharingId})
     .then(dynamic => { res.send({status: 0, data: dynamic});})
     .catch(error => {
-      console.error('通过id查询学校信息动态信息异常', error);
-      res.send({status: 1, msg: '通过id查询学校信息动态信息异常, 请重新尝试'});
+      console.error('通过id查询动态信息异常', error);
+      res.send({status: 1, msg: '通过id查询动态信息异常, 请重新尝试'});
     });
 });
 
@@ -803,6 +817,87 @@ router.get('/manage/reservation_info/search', (req, res) => {
 });
 // #endregion
 
+/**
+ * 常见问题模块
+ */
+// #region 
+// 添加常见问题
+router.post('/manage/common_problems/add', (req, res) => {
+  CommonProblemsModel.create({...req.body}).then(
+    res.send({status: 0, msg: '添加成功'})
+  ).catch(error => {
+    console.error('添加常见问题异常', error);
+    res.send({status: 1, msg: '添加常见问题异常, 请重新尝试！'});
+  });
+});
+
+// 获取常见问题列表
+router.get('/manage/common_problems/list', (req, res) => {
+  const {pageNum, pageSize} = req.query;
+  // 查询并根据发布时间进行排序
+  CommonProblemsModel.find()
+    .then((common_problems) => {
+    // console.log(news);
+      res.send({status: 0, data: pageFilter(common_problems, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取常见问题列表异常', error);
+      res.send({status: 1, msg: '获取常见问题列表异常, 请重新尝试'});
+    });
+});
+
+// 小程序获取常见问题列表
+router.get('/wechat/common_problems/list', (req, res) => {
+  // 查询并根据发布时间进行排序
+  CommonProblemsModel.find()
+    .then((common_problems) => {
+    // console.log(news);
+      res.send({status: 0, data: common_problems});
+    })
+    .catch(error => {
+      console.error('获取常见问题列表异常', error);
+      res.send({status: 1, msg: '获取常见问题列表异常, 请重新尝试'});
+    });
+});
+
+// 更新常见问题
+router.post('/manage/common_problems/update', (req, res) => {
+  // 读取请求参数数据
+  const { common_problemsObj, common_problemsId } = req.body; 
+  // 查询(根据_id)
+  CommonProblemsModel.updateOne({'_id': common_problemsId},{$set:common_problemsObj})
+    .then(res.send({status: 0, msg: '修改常见问题成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改常见问题异常, 请重新尝试！'});
+    });
+});
+
+// 删除常见问题
+router.post('/manage/common_problems/delete', (req, res) => {
+  const {common_problemsId} = req.body;
+  CommonProblemsModel.deleteOne({_id: common_problemsId})
+    .then(res.send({status: 0}))
+    .catch(error => {
+      console.error('删除异常', error);
+      res.send({status: 1, msg: '删除常见问题异常, 请重新尝试！'});
+    });
+});
+
+// 搜索常见问题列表
+router.get('/manage/common_problems/search', (req, res) => {
+  console.log(req.query);
+  const {pageNum, pageSize, common_problemsTheme} = req.query;
+  CommonProblemsModel.find({pub_theme: new RegExp(`^.*${common_problemsTheme}.*$`)})
+    .then(common_problems => {
+      res.send({status: 0, data: pageFilter(common_problems, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索常见问题列表异常', error);
+      res.send({status: 1, msg: '搜索常见问题列表异常, 请重新尝试'});
+    });
+});
+// #endregion
 /**
  * 用户模块
  */
