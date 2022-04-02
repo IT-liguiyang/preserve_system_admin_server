@@ -12,7 +12,7 @@ const SchoolModel = require('../models/SchoolModel');
 const AnnouncementModel = require('../models/AnnouncementModel');
 const NewsModel = require('../models/NewsModel');
 const DynamicSharingModel = require('../models/DynamicSharingModel');
-const OpinionsSuggestionsModel = require('../models/OpinionsSuggestionsModel');
+const FeedbackModel = require('../models/FeedbackModel');
 const ReservationInfoModel = require('../models/ReservationInfoModel');
 const UserModel = require('../models/UserModel');
 const CommonProblemsModel = require('../models/CommonProblemsModel');
@@ -106,12 +106,12 @@ router.get('/welcome', async (req, res) => {
     console.error('获取动态分享列表长度异常', error);
     res.send({status: 1, msg: '获取动态分享列表长度异常, 请重新尝试'});
   });
-  // 获取意见建议列表长度
-  await OpinionsSuggestionsModel.find().then(opinions_suggestions => {
-    numberObj.push({'opinions_suggestionsLength':opinions_suggestions.length});
+  // 获取意见反馈列表长度
+  await FeedbackModel.find().then(feedback => {
+    numberObj.push({'feedbackLength':feedback.length});
   }).catch(error => {
-    console.error('获取意见建议列表长度异常', error);
-    res.send({status: 1, msg: '获取意见建议列表长度异常, 请重新尝试'});
+    console.error('获取意见反馈列表长度异常', error);
+    res.send({status: 1, msg: '获取意见反馈列表长度异常, 请重新尝试'});
   });
   // 获取预约信息列表长度
   await ReservationInfoModel.find().then(reservation_infos => {
@@ -667,76 +667,89 @@ router.get('/manage/dynamic_sharing/search', (req, res) => {
 // #endregion
 
 /**
- * 意见建议模块
+ * 意见反馈模块
  */
 // #region 
-// 添加意见建议
-router.post('/manage/opinions_suggestions/add', (req, res) => {
-  OpinionsSuggestionsModel.create({...req.body}).then(
+// 添加意见反馈
+router.post('/manage/feedback/add', (req, res) => {
+  FeedbackModel.create({...req.body}).then(
     res.send({status: 0, msg: '添加成功'})
   ).catch(error => {
-    console.error('添加意见建议异常', error);
-    res.send({status: 1, msg: '添加意见建议异常, 请重新尝试！'});
+    console.error('添加意见反馈异常', error);
+    res.send({status: 1, msg: '添加意见反馈异常, 请重新尝试！'});
   });
 });
 
-// 获取意见建议列表
-router.get('/manage/opinions_suggestions/list', (req, res) => {
+// 获取意见反馈列表
+router.get('/manage/feedback/list', (req, res) => {
   const {pageNum, pageSize} = req.query;
   // 查询并根据发布时间进行排序
-  OpinionsSuggestionsModel.find().sort({'pub_time':-1})
-    .then((opinions_suggestions) => {
+  FeedbackModel.find().sort({'pub_time':-1})
+    .then((feedback) => {
       // console.log(news);
-      res.send({status: 0, data: pageFilter(opinions_suggestions, pageNum, pageSize)});
+      res.send({status: 0, data: pageFilter(feedback, pageNum, pageSize)});
     })
     .catch(error => {
-      console.error('获取意见建议列表异常', error);
-      res.send({status: 1, msg: '获取意见建议列表异常, 请重新尝试'});
+      console.error('获取意见反馈列表异常', error);
+      res.send({status: 1, msg: '获取意见反馈列表异常, 请重新尝试'});
     });
 });
 
-// 更新意见建议信息
-router.post('/manage/opinions_suggestions/update', (req, res) => {
+// 根据 发布人手机号 获取意见反馈列表
+router.post('/wechat/feedback/query_by_username', (req, res) => {
   // 读取请求参数数据
-  const { opinions_suggestionsObj, opinions_suggestionsId } = req.body; 
+  const { username } = req.body;
+  console.log(username);
+  FeedbackModel.find({pub_username: username}).sort({'pub_time':-1})
+    .then(feedback => { res.send({status: 0, data: feedback});})
+    .catch(error => {
+      console.error('通过发布人手机号查询意见反馈信息异常', error);
+      res.send({status: 1, msg: '通过发布人手机号查询意见反馈信息异常, 请重新尝试'});
+    });
+});
+
+// 更新意见反馈信息
+router.post('/manage/feedback/update', (req, res) => {
+  // 读取请求参数数据
+  const { feedbackObj, feedbackId } = req.body; 
   // 查询(根据_id)
-  OpinionsSuggestionsModel.updateOne({'_id': opinions_suggestionsId},{$set:opinions_suggestionsObj})
-    .then(res.send({status: 0, msg: '修改意见建议信息成功！'}))
+  FeedbackModel.updateOne({'_id': feedbackId},{$set:feedbackObj})
+    .then(res.send({status: 0, msg: '修改意见反馈信息成功！'}))
     .catch(error => {
       console.error('修改异常', error);
-      res.send({status: 1, msg: '修改意见建议信息异常, 请重新尝试！'});
+      res.send({status: 1, msg: '修改意见反馈信息异常, 请重新尝试！'});
     });
 });
 
-// 删除意见建议信息
-router.post('/manage/opinions_suggestions/delete', (req, res) => {
-  const {opinions_suggestionsId} = req.body;
+// 删除意见反馈信息
+router.post('/manage/feedback/delete', (req, res) => {
+  const {feedbackId} = req.body;
   // console.log(req.body);
-  OpinionsSuggestionsModel.deleteOne({_id: opinions_suggestionsId})
+  FeedbackModel.deleteOne({_id: feedbackId})
     .then(res.send({status: 0}))
     .catch(error => {
       console.error('删除异常', error);
-      res.send({status: 1, msg: '删除意见建议信息异常, 请重新尝试！'});
+      res.send({status: 1, msg: '删除意见反馈信息异常, 请重新尝试！'});
     });
 });
 
-// 搜索意见建议列表
-router.get('/manage/opinions_suggestions/search', (req, res) => {
+// 搜索意见反馈列表
+router.get('/manage/feedback/search', (req, res) => {
   console.log(req.query);
-  const {pageNum, pageSize, opinions_suggestionsTheme, opinions_suggestionsPublisher} = req.query;
+  const {pageNum, pageSize, feedbackAcceptor, feedbackPublisher} = req.query;
   let contition = {};
-  if (opinions_suggestionsTheme) {
-    contition = {pub_theme: new RegExp(`^.*${opinions_suggestionsTheme}.*$`)};
-  } else if (opinions_suggestionsPublisher) {
-    contition = {pub_realname: new RegExp(`^.*${opinions_suggestionsPublisher}.*$`)};
+  if (feedbackAcceptor) {
+    contition = {acceptor: new RegExp(`^.*${feedbackAcceptor}.*$`)};
+  } else if (feedbackPublisher) {
+    contition = {pub_realname: new RegExp(`^.*${feedbackPublisher}.*$`)};
   }
-  OpinionsSuggestionsModel.find(contition)
-    .then(opinions_suggestions => {
-      res.send({status: 0, data: pageFilter(opinions_suggestions, pageNum, pageSize)});
+  FeedbackModel.find(contition)
+    .then(feedback => {
+      res.send({status: 0, data: pageFilter(feedback, pageNum, pageSize)});
     })
     .catch(error => {
-      console.error('搜索意见建议列表异常', error);
-      res.send({status: 1, msg: '搜索意见建议列表异常, 请重新尝试'});
+      console.error('搜索意见反馈列表异常', error);
+      res.send({status: 1, msg: '搜索意见反馈列表异常, 请重新尝试'});
     });
 });
 // #endregion
