@@ -14,6 +14,7 @@ const NewsModel = require('../models/NewsModel');
 const DynamicSharingModel = require('../models/DynamicSharingModel');
 const FeedbackModel = require('../models/FeedbackModel');
 const ReservationInfoModel = require('../models/ReservationInfoModel');
+const BookingInfoModel = require('../models/BookingInfoModel');
 const UserModel = require('../models/UserModel');
 const CommonProblemsModel = require('../models/CommonProblemsModel');
 
@@ -346,6 +347,24 @@ router.get('/manage/school/search', (req, res) => {
       res.send({status: 1, msg: '搜索学校列表异常, 请重新尝试'});
     });
 });
+
+/**
+ 通过 学校名称 查询学校信息
+ */
+router.get('/manage/school_info_by_schoolName', (req, res) => {
+  // 读取请求参数数据
+  const { schoolName } = req.query;
+  console.log(schoolName);
+  SchoolModel.find({school: new RegExp(`^.*${schoolName}.*$`)})
+    .then(school => {
+      res.send({status: 0, data: school});
+    })
+    .catch(error => {
+      console.error('通过学校名称查询学校信息异常', error);
+      res.send({status: 1, msg: '通过学校名称查询学校信息异常, 请重新尝试'});
+    });
+});
+
 // #endregion
 
 /**
@@ -755,6 +774,96 @@ router.get('/manage/feedback/search', (req, res) => {
 // #endregion
 
 /**
+ * 预约设置模块
+ */
+// #region 
+// 添加预约设置
+router.post('/manage/booking_info/add', (req, res) => {
+  const { school_Id } = req.body;
+
+  BookingInfoModel.findOne({school_Id})
+    .then(booking_info => {
+    // 如果booking_info有值(已存在)
+      if (booking_info) {
+      // 返回提示错误的信息
+        res.send({status: 1, msg: '当前学校已经添加过预约设置！'});
+        return new Promise(() => {
+        });
+      } else { // 没值(不存在)
+      // 保存
+        return BookingInfoModel.create({...req.body});
+      }
+    })
+    .then(booking_info => {
+    // 返回包含schooladmin的json数据
+      res.send({status: 0, data: booking_info});
+    })
+    .catch(error => {
+      console.error('添加预约设置异常', error);
+      res.send({status: 1, msg: '添加预约设置异常, 请重新尝试！'});
+    });
+});
+
+// 获取预约设置列表
+router.get('/manage/booking_info/list', (req, res) => {
+  BookingInfoModel.find()
+    .then((booking_info) => {
+      res.send({status: 0, data:booking_info});
+    })
+    .catch(error => {
+      console.error('获取预约设置列表异常', error);
+      res.send({status: 1, msg: '获取预约设置列表异常, 请重新尝试'});
+    });
+});
+
+// 更新预约设置
+router.post('/manage/booking_info/update', (req, res) => {
+  // 读取请求参数数据
+  const { booking_infoObj, school_id } = req.body; 
+  console.log(booking_infoObj, school_id);
+  // 查询(根据_id)
+  BookingInfoModel.updateOne({'school_id': school_id},{$set:booking_infoObj})
+    .then(res.send({status: 0, msg: '修改预约设置成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改预约设置异常, 请重新尝试！'});
+    });
+});
+
+// 删除预约设置
+router.post('/manage/booking_info/delete', (req, res) => {
+  const {booking_infoId} = req.body;
+  // console.log(req.body);
+  BookingInfoModel.deleteOne({_id: booking_infoId})
+    .then(res.send({status: 0}))
+    .catch(error => {
+      console.error('删除异常', error);
+      res.send({status: 1, msg: '删除预约设置异常, 请重新尝试！'});
+    });
+});
+
+// 搜索预约设置列表
+router.get('/manage/booking_info/search', (req, res) => {
+  console.log(req.query);
+  const {pageNum, pageSize, booking_info_School, booking_info_Name} = req.query;
+  let contition = {};
+  if (booking_info_School) { // 按已约学校搜索
+    contition = {res_school: new RegExp(`^.*${booking_info_School}.*$`)};
+  } else if (booking_info_Name) {  // 按预约姓名搜索
+    contition = {res_realname: new RegExp(`^.*${booking_info_Name}.*$`)};
+  }
+  BookingInfoModel.find(contition)
+    .then(booking_info => {
+      res.send({status: 0, data: pageFilter(booking_info, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索预约设置列表异常', error);
+      res.send({status: 1, msg: '搜索预约设置列表异常, 请重新尝试'});
+    });
+});
+// #endregion
+
+/**
  * 预约信息模块
  */
 // #region 
@@ -1117,6 +1226,7 @@ router.get('/manage/school_admin/search', (req, res) => {
       res.send({status: 1, msg: '搜索学校管理员列表异常, 请重新尝试'});
     });
 });
+
 // #endregion
 
 /**
@@ -1274,7 +1384,7 @@ router.post('/manage/role/system_admin/update', (req, res) => {
 //#endregion
 
 /**
- 通过学校管理员姓名查询学校信息
+ 通过学校管理员姓名查询学校管理员信息
  */
 router.post('/manage/school_info_by_username', (req, res) => {
   // 读取请求参数数据
