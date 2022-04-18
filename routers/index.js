@@ -318,17 +318,17 @@ router.post('/manage/school/delete', (req, res) => {
 router.get('/manage/school/search', (req, res) => {
   console.log(req.query);
   const {pageNum, pageSize, schoolName, schoolDistrict, openAreas} = req.query;
-  let contition = {};
+  let condition = {};
   if (schoolName) {
     // 按学校名称搜索
-    contition = {school: new RegExp(`^.*${schoolName}.*$`)};  
+    condition = {school: new RegExp(`^.*${schoolName}.*$`)};  
   } else if (schoolDistrict) {
     // 按所在区域搜索
-    contition = {school: new RegExp(`^.*${schoolDistrict}.*$`)};
+    condition = {school: new RegExp(`^.*${schoolDistrict}.*$`)};
   } else if (openAreas) {
     // 按所在区域搜索
-    contition = {openAreasInfoStr: new RegExp(`^.*${openAreas}.*$`)};
-    SchoolModel.find(contition)
+    condition = {openAreasInfoStr: new RegExp(`^.*${openAreas}.*$`)};
+    SchoolModel.find(condition)
       .then(schools => {
         res.send({status: 0, data: pageFilter(schools, pageNum, pageSize)});
       })
@@ -338,7 +338,7 @@ router.get('/manage/school/search', (req, res) => {
       });
     return;
   }
-  SchoolModel.find(contition)
+  SchoolModel.find(condition)
     .then(schools => {
       res.send({status: 0, data: pageFilter(schools, pageNum, pageSize)});
     })
@@ -356,6 +356,23 @@ router.get('/manage/school_info_by_schoolName', (req, res) => {
   const { schoolName } = req.query;
   console.log(schoolName);
   SchoolModel.find({school: new RegExp(`^.*${schoolName}.*$`)})
+    .then(school => {
+      res.send({status: 0, data: school});
+    })
+    .catch(error => {
+      console.error('通过学校名称查询学校信息异常', error);
+      res.send({status: 1, msg: '通过学校名称查询学校信息异常, 请重新尝试'});
+    });
+});
+
+/**
+ 通过 学校-id 查询学校信息
+ */
+router.get('/manage/school_info_by_id', (req, res) => {
+  // 读取请求参数数据
+  const { school_id } = req.query;
+  console.log(school_id);
+  SchoolModel.find({'_id': school_id})
     .then(school => {
       res.send({status: 0, data: school});
     })
@@ -441,13 +458,13 @@ router.post('/manage/announcement/delete', (req, res) => {
 router.get('/manage/announcement/search', (req, res) => {
   console.log(req.query);
   const {pageNum, pageSize, announcementTheme, announcementPublisher} = req.query;
-  let contition = {};
+  let condition = {};
   if (announcementTheme) {
-    contition = {pub_theme: new RegExp(`^.*${announcementTheme}.*$`)};
+    condition = {pub_theme: new RegExp(`^.*${announcementTheme}.*$`)};
   } else if (announcementPublisher) {
-    contition = {publisher: new RegExp(`^.*${announcementPublisher}.*$`)};
+    condition = {publisher: new RegExp(`^.*${announcementPublisher}.*$`)};
   }
-  AnnouncementModel.find(contition)
+  AnnouncementModel.find(condition)
     .then(announcements => {
       res.send({status: 0, data: pageFilter(announcements, pageNum, pageSize)});
     })
@@ -530,13 +547,13 @@ router.post('/manage/news/delete', (req, res) => {
 router.get('/manage/news/search', (req, res) => {
   console.log(req.query);
   const {pageNum, pageSize, newsTheme, newsPublisher} = req.query;
-  let contition = {};
+  let condition = {};
   if (newsTheme) {
-    contition = {pub_theme: new RegExp(`^.*${newsTheme}.*$`)};
+    condition = {pub_theme: new RegExp(`^.*${newsTheme}.*$`)};
   } else if (newsPublisher) {
-    contition = {publisher: new RegExp(`^.*${newsPublisher}.*$`)};
+    condition = {publisher: new RegExp(`^.*${newsPublisher}.*$`)};
   }
-  NewsModel.find(contition).sort({real_pub_time:1})
+  NewsModel.find(condition).sort({real_pub_time:1})
     .then(news => {
       res.send({status: 0, data: pageFilter(news, pageNum, pageSize)});
     })
@@ -550,13 +567,13 @@ router.get('/manage/news/search', (req, res) => {
 router.get('/wechat/news/search', (req, res) => {
   console.log(req.query);
   const {newsTheme, newsPublisher} = req.query;
-  let contition = {};
+  let condition = {};
   if (newsTheme) {
-    contition = {pub_theme: new RegExp(`^.*${newsTheme}.*$`)};
+    condition = {pub_theme: new RegExp(`^.*${newsTheme}.*$`)};
   } else if (newsPublisher) {
-    contition = {publisher: new RegExp(`^.*${newsPublisher}.*$`)};
+    condition = {publisher: new RegExp(`^.*${newsPublisher}.*$`)};
   }
-  NewsModel.find(contition).sort({real_pub_time:1})
+  NewsModel.find(condition).sort({real_pub_time:1})
     .then(news => {
       res.send({status: 0, data: news});
     })
@@ -668,13 +685,13 @@ router.post('/manage/dynamic_sharing/delete', (req, res) => {
 router.get('/manage/dynamic_sharing/search', (req, res) => {
   console.log(req.query);
   const {pageNum, pageSize, dynamic_sharingTheme, dynamic_sharingPublisher} = req.query;
-  let contition = {};
+  let condition = {};
   if (dynamic_sharingTheme) {
-    contition = {pub_theme: new RegExp(`^.*${dynamic_sharingTheme}.*$`)};
+    condition = {pub_theme: new RegExp(`^.*${dynamic_sharingTheme}.*$`)};
   } else if (dynamic_sharingPublisher) {
-    contition = {publisher: new RegExp(`^.*${dynamic_sharingPublisher}.*$`)};
+    condition = {publisher: new RegExp(`^.*${dynamic_sharingPublisher}.*$`)};
   }
-  DynamicSharingModel.find(contition)
+  DynamicSharingModel.find(condition)
     .then(dynamic_sharing => {
       res.send({status: 0, data: pageFilter(dynamic_sharing, pageNum, pageSize)});
     })
@@ -756,13 +773,13 @@ router.post('/manage/feedback/delete', (req, res) => {
 router.get('/manage/feedback/search', (req, res) => {
   console.log(req.query);
   const {pageNum, pageSize, feedbackAcceptor, feedbackPublisher} = req.query;
-  let contition = {};
+  let condition = {};
   if (feedbackAcceptor) {
-    contition = {acceptor: new RegExp(`^.*${feedbackAcceptor}.*$`)};
+    condition = {acceptor: new RegExp(`^.*${feedbackAcceptor}.*$`)};
   } else if (feedbackPublisher) {
-    contition = {pub_realname: new RegExp(`^.*${feedbackPublisher}.*$`)};
+    condition = {pub_realname: new RegExp(`^.*${feedbackPublisher}.*$`)};
   }
-  FeedbackModel.find(contition)
+  FeedbackModel.find(condition)
     .then(feedback => {
       res.send({status: 0, data: pageFilter(feedback, pageNum, pageSize)});
     })
@@ -779,9 +796,8 @@ router.get('/manage/feedback/search', (req, res) => {
 // #region 
 // 添加预约设置
 router.post('/manage/booking_info/add', (req, res) => {
-  const { school_Id } = req.body;
-
-  BookingInfoModel.findOne({school_Id})
+  const { school_id } = req.body; 
+  BookingInfoModel.findOne({school_id})
     .then(booking_info => {
     // 如果booking_info有值(已存在)
       if (booking_info) {
@@ -830,6 +846,20 @@ router.post('/manage/booking_info/update', (req, res) => {
     });
 });
 
+// 更新预约设置中的 开放信息 open_info 字段
+router.post('/manage/booking_info/update_open_info', (req, res) => {
+  // 读取请求参数数据
+  const { newOpenInfo, school_id } = req.body; 
+  console.log(newOpenInfo, school_id);
+  // 查询(根据_id)
+  BookingInfoModel.updateOne({'school_id': school_id},{$set:{'open_info': newOpenInfo}})
+    .then(res.send({status: 0, msg: '修改开放信息成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改开放信息异常, 请重新尝试！'});
+    });
+});
+
 // 删除预约设置
 router.post('/manage/booking_info/delete', (req, res) => {
   const {booking_infoId} = req.body;
@@ -842,17 +872,30 @@ router.post('/manage/booking_info/delete', (req, res) => {
     });
 });
 
+// 通过学校 id 预约设置
+router.get('/manage/booking_info/search_by_school_id', (req, res) => {
+  const {school_id} = req.query;
+  BookingInfoModel.find({school_id: school_id})
+    .then(booking_info => {
+      res.send({status: 0, data: booking_info});
+    })
+    .catch(error => {
+      console.error('搜索预约设置异常', error);
+      res.send({status: 1, msg: '搜索预约设置异常, 请重新尝试'});
+    });
+});
+
 // 搜索预约设置列表
 router.get('/manage/booking_info/search', (req, res) => {
   console.log(req.query);
   const {pageNum, pageSize, booking_info_School, booking_info_Name} = req.query;
-  let contition = {};
+  let condition = {};
   if (booking_info_School) { // 按已约学校搜索
-    contition = {res_school: new RegExp(`^.*${booking_info_School}.*$`)};
+    condition = {res_school: new RegExp(`^.*${booking_info_School}.*$`)};
   } else if (booking_info_Name) {  // 按预约姓名搜索
-    contition = {res_realname: new RegExp(`^.*${booking_info_Name}.*$`)};
+    condition = {res_realname: new RegExp(`^.*${booking_info_Name}.*$`)};
   }
-  BookingInfoModel.find(contition)
+  BookingInfoModel.find(condition)
     .then(booking_info => {
       res.send({status: 0, data: pageFilter(booking_info, pageNum, pageSize)});
     })
@@ -869,20 +912,55 @@ router.get('/manage/booking_info/search', (req, res) => {
 // #region 
 // 添加预约信息
 router.post('/manage/reservation_info/add', (req, res) => {
-  ReservationInfoModel.create({...req.body}).then(
-    res.send({status: 0, msg: '添加成功'})
-  ).catch(error => {
-    console.error('添加预约信息异常', error);
-    res.send({status: 1, msg: '添加预约信息异常, 请重新尝试！'});
-  });
+  // 读取请求参数数据
+  // const { res_username, res_date, res_time } = req.body;
+  const { res_username, res_date } = req.body;
+  // 处理: 如果 res_username, res_date, res_time 同时存在一样的记录，
+  //       说明今天的当前时段已经预约了场馆，不能再预约
+  ReservationInfoModel.findOne({res_username, res_date})
+    .then(reservation_info => {
+      // 如果reservation_info有值(已存在)
+      if (reservation_info) {
+        // 返回提示错误的信息
+        res.send({status: 1, msg: '您已预约了场馆！'});
+        return new Promise(() => {
+        });
+      } else { // 没值(不存在)
+        // 保存
+        return ReservationInfoModel.create({...req.body});
+      }
+    })
+    .then(reservation_info => {
+      // 返回包含schooladmin的json数据
+      res.send({status: 0, data: reservation_info});
+    })
+    .catch(error => {
+      console.error('注册异常', error);
+      res.send({status: 1, msg: '添加学校管理员异常, 请重新尝试！'});
+    });
 });
 
-// 获取预约信息列表
-router.get('/manage/reservation_info/list', (req, res) => {
-  const {pageNum, pageSize} = req.query;
+// // 获取预约信息列表
+// router.get('/manage/reservation_info/list', (req, res) => {
+//   const {school_id, pageNum, pageSize} = req.query;
+//   // 查询并根据发布时间进行排序
+//   ReservationInfoModel.find({'res_school_id':school_id}).sort({'submit_time':-1})
+//     .then((reservation_info) => {
+//     // console.log(news);
+//       res.send({status: 0, data: pageFilter(reservation_info, pageNum, pageSize)});
+//     })
+//     .catch(error => {
+//       console.error('获取预约信息列表异常', error);
+//       res.send({status: 1, msg: '获取预约信息列表异常, 请重新尝试'});
+//     });
+// });
+
+// 获取预约信息列表 -- 通过学校id
+router.get('/manage/reservation_info/list_by_school_name', (req, res) => {
+  const {pageNum, pageSize, school_id} = req.query;
+  console.log(pageNum, pageSize, school_id);
   // 查询并根据发布时间进行排序
-  // ReservationInfoModel.find().sort({'pub_time':-1})
-  ReservationInfoModel.find()
+  ReservationInfoModel.find({'res_school_id': school_id}).sort({'submit_time':-1})
     .then((reservation_info) => {
     // console.log(news);
       res.send({status: 0, data: pageFilter(reservation_info, pageNum, pageSize)});
@@ -893,12 +971,68 @@ router.get('/manage/reservation_info/list', (req, res) => {
     });
 });
 
-// 更新预约信息信息
+// 小程序获取预约信息列表 -- 通过学校id
+router.get('/manage/reservation_info/list_by_school_id', (req, res) => {
+  const {school_id} = req.query;
+  console.log(school_id);
+  // 查询并根据发布时间进行排序
+  ReservationInfoModel.find({'res_school_id': school_id}).sort({'submit_time':-1})
+    .then((reservation_info) => {
+      res.send({status: 0, data: reservation_info});
+    })
+    .catch(error => {
+      console.error('获取预约信息列表异常', error);
+      res.send({status: 1, msg: '获取预约信息列表异常, 请重新尝试'});
+    });
+});
+
+// 获取预约信息列表 -- 通过发布人手机号
+router.get('/manage/reservation_info/list_by_username', (req, res) => {
+  const {username} = req.query;
+  console.log(username);
+  // 查询并根据发布时间进行排序
+  ReservationInfoModel.find({'res_username': username}).sort({'submit_time':-1})
+    .then((reservation_info) => {
+      res.send({status: 0, data: reservation_info});
+    })
+    .catch(error => {
+      console.error('获取预约信息列表异常', error);
+      res.send({status: 1, msg: '获取预约信息列表异常, 请重新尝试'});
+    });
+});
+
+// 更新预约信息
 router.post('/manage/reservation_info/update', (req, res) => {
   // 读取请求参数数据
   const { reservation_infoObj, reservation_infoId } = req.body; 
   // 查询(根据_id)
   ReservationInfoModel.updateOne({'_id': reservation_infoId},{$set:reservation_infoObj})
+    .then(res.send({status: 0, msg: '修改预约信息成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改预约信息异常, 请重新尝试！'});
+    });
+});
+
+// 更新 status
+router.post('/manage/reservation_info/update_status', (req, res) => {
+  // 读取请求参数数据
+  const { status, reservation_infoId } = req.body; 
+  // 查询(根据_id)
+  ReservationInfoModel.updateOne({'_id': reservation_infoId},{$set:{'status': status}})
+    .then(res.send({status: 0, msg: '修改预约信息成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改预约信息异常, 请重新尝试！'});
+    });
+});
+
+// 更新 comment
+router.post('/manage/reservation_info/update_comment', (req, res) => {
+  // 读取请求参数数据
+  const { commentObj, reservation_infoId } = req.body; 
+  // 查询(根据_id)
+  ReservationInfoModel.updateOne({'_id': reservation_infoId},{$set:{'comment': commentObj}})
     .then(res.send({status: 0, msg: '修改预约信息成功！'}))
     .catch(error => {
       console.error('修改异常', error);
@@ -921,14 +1055,14 @@ router.post('/manage/reservation_info/delete', (req, res) => {
 // 搜索预约信息列表
 router.get('/manage/reservation_info/search', (req, res) => {
   console.log(req.query);
-  const {pageNum, pageSize, reservation_info_School, reservation_info_Name} = req.query;
-  let contition = {};
+  const {school_id, pageNum, pageSize, reservation_info_School, reservation_info_Name} = req.query;
+  let condition = {};
   if (reservation_info_School) { // 按已约学校搜索
-    contition = {res_school: new RegExp(`^.*${reservation_info_School}.*$`)};
+    condition = {res_school_name: new RegExp(`^.*${reservation_info_School}.*$`)};
   } else if (reservation_info_Name) {  // 按预约姓名搜索
-    contition = {res_realname: new RegExp(`^.*${reservation_info_Name}.*$`)};
+    condition = {res_realname: new RegExp(`^.*${reservation_info_Name}.*$`)};
   }
-  ReservationInfoModel.find(contition)
+  ReservationInfoModel.find({$and:[{'res_school_id': school_id},condition]})
     .then(reservation_info => {
       res.send({status: 0, data: pageFilter(reservation_info, pageNum, pageSize)});
     })
@@ -1115,13 +1249,13 @@ router.post('/manage/user/delete', (req, res) => {
 router.get('/manage/user/search', (req, res) => {
   console.log(req.query);
   const {pageNum, pageSize, username, realname} = req.query;
-  let contition = {};
+  let condition = {};
   if (username) { // 按账号搜索
-    contition = {username: new RegExp(`^.*${username}.*$`)};
+    condition = {username: new RegExp(`^.*${username}.*$`)};
   } else if (realname) {  // 按预约姓名搜索
-    contition = {realname: new RegExp(`^.*${realname}.*$`)};
+    condition = {realname: new RegExp(`^.*${realname}.*$`)};
   }
-  UserModel.find(contition)
+  UserModel.find(condition)
     .then(user => {
       res.send({status: 0, data: pageFilter(user, pageNum, pageSize)});
     })
@@ -1211,13 +1345,13 @@ router.post('/manage/school_admin/delete', (req, res) => {
 router.get('/manage/school_admin/search', (req, res) => {
   console.log(req.query);
   const {pageNum, pageSize, school_name, realname} = req.query;
-  let contition = {};
+  let condition = {};
   if (school_name) { // 按学校搜索
-    contition = {school_name: new RegExp(`^.*${school_name}.*$`)};
+    condition = {school_name: new RegExp(`^.*${school_name}.*$`)};
   } else if (realname) {  // 按姓名搜索
-    contition = {realname: new RegExp(`^.*${realname}.*$`)};
+    condition = {realname: new RegExp(`^.*${realname}.*$`)};
   }
-  SchoolAdminModel.find(contition)
+  SchoolAdminModel.find(condition)
     .then(school_admin => {
       res.send({status: 0, data: pageFilter(school_admin, pageNum, pageSize)});
     })
@@ -1307,13 +1441,13 @@ router.post('/manage/system_admin/delete', (req, res) => {
 router.get('/manage/system_admin/search', (req, res) => {
   console.log(req.query);
   const {pageNum, pageSize, username, realname} = req.query;
-  let contition = {};
+  let condition = {};
   if (username) { // 按账号搜索
-    contition = {username: new RegExp(`^.*${username}.*$`)};
+    condition = {username: new RegExp(`^.*${username}.*$`)};
   } else if (realname) {  // 按预约姓名搜索
-    contition = {realname: new RegExp(`^.*${realname}.*$`)};
+    condition = {realname: new RegExp(`^.*${realname}.*$`)};
   }
-  SystemAdminModel.find(contition)
+  SystemAdminModel.find(condition)
     .then(system_admin => {
       res.send({status: 0, data: pageFilter(system_admin, pageNum, pageSize)});
     })
