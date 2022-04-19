@@ -15,6 +15,7 @@ const DynamicSharingModel = require('../models/DynamicSharingModel');
 const FeedbackModel = require('../models/FeedbackModel');
 const ReservationInfoModel = require('../models/ReservationInfoModel');
 const BookingInfoModel = require('../models/BookingInfoModel');
+const MessageModel = require('../models/MessageModel');
 const UserModel = require('../models/UserModel');
 const CommonProblemsModel = require('../models/CommonProblemsModel');
 
@@ -413,7 +414,7 @@ router.get('/manage/announcement/list', (req, res) => {
     });
 });
 
-// 获取指定发布者的公告列表
+// 获取公告列表 通过发布人
 router.get('/manage/announcement/search_by_publisher', (req, res) => {
   const {publisher} = req.query;
   console.log(publisher);
@@ -421,6 +422,21 @@ router.get('/manage/announcement/search_by_publisher', (req, res) => {
   AnnouncementModel.find({publisher: publisher}).sort({'pub_time':-1})
     .then((announcement) => {
       res.send({status: 0, data: announcement});
+    })
+    .catch(error => {
+      console.error('获取公告列表异常', error);
+      res.send({status: 1, msg: '获取公告列表异常, 请重新尝试'});
+    });
+});
+
+// 获取公告列表 通过发布人（带分页）
+router.get('/manage/announcement/search_by_publisher_pageFilter', (req, res) => {
+  const {schoolName,pageNum, pageSize} = req.query;
+  console.log(schoolName);
+  // 查询并根据发布时间进行排序
+  AnnouncementModel.find({publisher: schoolName}).sort({'pub_time':-1})
+    .then((announcement) => {
+      res.send({status: 0, data: pageFilter(announcement, pageNum, pageSize)});
     })
     .catch(error => {
       console.error('获取公告列表异常', error);
@@ -496,6 +512,21 @@ router.get('/manage/news/list', (req, res) => {
   NewsModel.find().sort({'real_pub_time':1})
     .then((news) => {
       // console.log(news);
+      res.send({status: 0, data: pageFilter(news, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取新闻列表异常', error);
+      res.send({status: 1, msg: '获取新闻列表异常, 请重新尝试'});
+    });
+});
+
+// 获取新闻列表 通过发布人（带分页）
+router.get('/manage/news/search_by_publisher_pageFilter', (req, res) => {
+  const {schoolName, pageNum, pageSize} = req.query;
+  console.log(schoolName);
+  // 查询并根据发布时间进行排序
+  NewsModel.find({publisher: schoolName}).sort({'pub_time':-1})
+    .then((news) => {
       res.send({status: 0, data: pageFilter(news, pageNum, pageSize)});
     })
     .catch(error => {
@@ -731,6 +762,21 @@ router.get('/manage/feedback/list', (req, res) => {
     });
 });
 
+// 获取意见反馈列表 通过发布人（带分页）
+router.get('/manage/feedback/search_by_acceptor_pageFilter', (req, res) => {
+  const {acceptor, pageNum, pageSize} = req.query;
+  console.log(acceptor);
+  // 查询并根据发布时间进行排序
+  FeedbackModel.find({acceptor: acceptor}).sort({'pub_time':-1})
+    .then((news) => {
+      res.send({status: 0, data: pageFilter(news, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取意见反馈列表异常', error);
+      res.send({status: 1, msg: '获取意见反馈列表异常, 请重新尝试'});
+    });
+});
+
 // 根据 发布人手机号 获取意见反馈列表
 router.post('/wechat/feedback/query_by_username', (req, res) => {
   // 读取请求参数数据
@@ -940,23 +986,22 @@ router.post('/manage/reservation_info/add', (req, res) => {
     });
 });
 
-// // 获取预约信息列表
-// router.get('/manage/reservation_info/list', (req, res) => {
-//   const {school_id, pageNum, pageSize} = req.query;
-//   // 查询并根据发布时间进行排序
-//   ReservationInfoModel.find({'res_school_id':school_id}).sort({'submit_time':-1})
-//     .then((reservation_info) => {
-//     // console.log(news);
-//       res.send({status: 0, data: pageFilter(reservation_info, pageNum, pageSize)});
-//     })
-//     .catch(error => {
-//       console.error('获取预约信息列表异常', error);
-//       res.send({status: 1, msg: '获取预约信息列表异常, 请重新尝试'});
-//     });
-// });
+// 获取预约信息列表
+router.get('/manage/reservation_info/list', (req, res) => {
+  const {pageNum, pageSize} = req.query;
+  // 查询并根据发布时间进行排序
+  ReservationInfoModel.find().sort({'submit_time':-1})
+    .then((reservation_info) => {
+      res.send({status: 0, data: pageFilter(reservation_info, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取预约信息列表异常', error);
+      res.send({status: 1, msg: '获取预约信息列表异常, 请重新尝试'});
+    });
+});
 
 // 获取预约信息列表 -- 通过学校id
-router.get('/manage/reservation_info/list_by_school_name', (req, res) => {
+router.get('/manage/reservation_info/list_by_school_id', (req, res) => {
   const {pageNum, pageSize, school_id} = req.query;
   console.log(pageNum, pageSize, school_id);
   // 查询并根据发布时间进行排序
@@ -972,7 +1017,7 @@ router.get('/manage/reservation_info/list_by_school_name', (req, res) => {
 });
 
 // 小程序获取预约信息列表 -- 通过学校id
-router.get('/manage/reservation_info/list_by_school_id', (req, res) => {
+router.get('/wechat/reservation_info/list_by_school_id', (req, res) => {
   const {school_id} = req.query;
   console.log(school_id);
   // 查询并根据发布时间进行排序
@@ -1052,9 +1097,8 @@ router.post('/manage/reservation_info/delete', (req, res) => {
     });
 });
 
-// 搜索预约信息列表
-router.get('/manage/reservation_info/search', (req, res) => {
-  console.log(req.query);
+// 搜索预约信息列表 -学校管理员
+router.get('/manage/reservation_info/search_by_school_id', (req, res) => {
   const {school_id, pageNum, pageSize, reservation_info_School, reservation_info_Name} = req.query;
   let condition = {};
   if (reservation_info_School) { // 按已约学校搜索
@@ -1063,6 +1107,139 @@ router.get('/manage/reservation_info/search', (req, res) => {
     condition = {res_realname: new RegExp(`^.*${reservation_info_Name}.*$`)};
   }
   ReservationInfoModel.find({$and:[{'res_school_id': school_id},condition]})
+    .then(reservation_info => {
+      res.send({status: 0, data: pageFilter(reservation_info, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索预约信息列表异常', error);
+      res.send({status: 1, msg: '搜索预约信息列表异常, 请重新尝试'});
+    });
+});
+
+// 搜索预约信息列表
+router.get('/manage/reservation_info/search', (req, res) => {
+  const {pageNum, pageSize, reservation_info_School, reservation_info_Name} = req.query;
+  let condition = {};
+  if (reservation_info_School) { // 按已约学校搜索
+    condition = {res_school_name: new RegExp(`^.*${reservation_info_School}.*$`)};
+  } else if (reservation_info_Name) {  // 按预约姓名搜索
+    condition = {res_realname: new RegExp(`^.*${reservation_info_Name}.*$`)};
+  }
+  ReservationInfoModel.find(condition)
+    .then(reservation_info => {
+      res.send({status: 0, data: pageFilter(reservation_info, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('搜索预约信息列表异常', error);
+      res.send({status: 1, msg: '搜索预约信息列表异常, 请重新尝试'});
+    });
+});
+// #endregion
+
+/**
+ * 用户消息模块
+ */
+// #region 
+// 添加用户消息
+router.post('/manage/message/add', (req, res) => {
+  MessageModel.create({...req.body}).then(
+    res.send({status: 0, msg: '添加成功'})
+  ).catch(error => {
+    console.error('添加用户消息异常', error);
+    res.send({status: 1, msg: '添加用户消息异常, 请重新尝试！'});
+  });
+});
+
+// 获取用户消息列表
+router.get('/manage/message/list', (req, res) => {
+  const {pageNum, pageSize} = req.query;
+  // 查询并根据发布时间进行排序
+  MessageModel.find().sort({'pub_time':-1})
+    .then((message) => {
+      res.send({status: 0, data: pageFilter(message, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取用户消息列表异常', error);
+      res.send({status: 1, msg: '获取用户消息列表异常, 请重新尝试'});
+    });
+});
+
+// 获取用户消息列表 -通过发布人
+router.get('/manage/message/search_by_publisher_pageFilter', (req, res) => {
+  const {publisher, pageNum, pageSize} = req.query;
+  // 查询并根据发布时间进行排序
+  MessageModel.find({'publisher':publisher}).sort({'pub_time':-1})
+    .then((message) => {
+      res.send({status: 0, data: pageFilter(message, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取用户消息列表异常', error);
+      res.send({status: 1, msg: '获取用户消息列表异常, 请重新尝试'});
+    });
+});
+
+// 获取用户 未读的消息 列表
+router.get('/manage/message/unread_list', (req, res) => {
+  // 查询并根据发布时间进行排序
+  MessageModel.find({'isRead':'0'}).sort({'pub_time':-1})
+    .then((message) => {
+      res.send({status: 0, data: message});
+    })
+    .catch(error => {
+      console.error('获取用户未读的消息列表异常', error);
+      res.send({status: 1, msg: '获取用户未读的消息列表异常, 请重新尝试'});
+    });
+});
+
+// 小程序获取用户消息列表
+router.get('/wechat/message/list_by_username', (req, res) => {
+  const {username} = req.query;
+  // 查询并根据发布时间进行排序
+  MessageModel.find({'acceptor': username}).sort({'pub_time':-1})
+    .then((message) => {
+      res.send({status: 0, data: message});
+    })
+    .catch(error => {
+      console.error('获取用户消息列表异常', error);
+      res.send({status: 1, msg: '获取用户消息列表异常, 请重新尝试'});
+    });
+});
+
+// 更新用户消息
+router.post('/manage/message/update', (req, res) => {
+  // 读取请求参数数据
+  const { newMessageObj, messageId } = req.body; 
+  console.log(newMessageObj, messageId);
+  // 查询(根据_id)
+  MessageModel.updateOne({'_id': messageId},{$set: newMessageObj})
+    .then(res.send({status: 0, msg: '修改用户消息成功！'}))
+    .catch(error => {
+      console.error('修改异常', error);
+      res.send({status: 1, msg: '修改用户消息异常, 请重新尝试！'});
+    });
+});
+
+// 删除用户消息
+router.post('/manage/message/delete', (req, res) => {
+  const {messageId} = req.body;
+  MessageModel.deleteOne({_id: messageId})
+    .then(res.send({status: 0}))
+    .catch(error => {
+      console.error('删除异常', error);
+      res.send({status: 1, msg: '删除用户消息异常, 请重新尝试！'});
+    });
+});
+
+// 搜索用户消息列表
+router.get('/manage/message/search', (req, res) => {
+  const {pageNum, pageSize, messagePublisher, messageAcceptor} = req.query;
+  let condition = {};
+  if (messagePublisher) { // 按已约学校搜索
+    condition = {publisher: new RegExp(`^.*${messagePublisher}.*$`)};
+  } else if (messageAcceptor) {  // 按预约姓名搜索
+    condition = {acceptor: new RegExp(`^.*${messageAcceptor}.*$`)};
+  }
+  MessageModel.find(condition)
     .then(reservation_info => {
       res.send({status: 0, data: pageFilter(reservation_info, pageNum, pageSize)});
     })
@@ -1154,6 +1331,7 @@ router.get('/manage/common_problems/search', (req, res) => {
     });
 });
 // #endregion
+
 /**
  * 用户模块
  */
