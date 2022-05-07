@@ -10,7 +10,7 @@ const systemAdminSchema = new mongoose.Schema({
   realname: String, // 姓名
   username: {type: String, required: true}, // 用户名
   password: {type: String, required: true}, // 密码
-  role_id: String,
+  role_id: String, // 角色编号
   auth_time: String, // 授权时间
   auth_person: String, // 授权时间
   auth_menus: Array, // 所有有权限操作的菜单path的数组

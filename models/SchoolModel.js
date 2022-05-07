@@ -1,9 +1,8 @@
 /*
-能操作schooladmin集合数据的Model
+能操作school集合数据的Model
  */
 // 1.引入mongoose
 const mongoose = require('mongoose');
-// const md5 = require('blueimp-md5')
 
 // 2.字义Schema(描述文档结构)
 const schoolSchema = new mongoose.Schema({
@@ -22,7 +21,7 @@ const schoolSchema = new mongoose.Schema({
   create_time: {type: Number, default:new Date()} 
 });
 
-// 3. 定义Model(与集合对应, 可以操作集合)
+// 3. 定义Model映射(通过映射返回的值对数据库进行增、删、改、查)
 const SchoolModel = mongoose.model('schools', schoolSchema);
 
 // 4. 向外暴露Model

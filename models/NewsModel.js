@@ -9,7 +9,7 @@ const newsSchema = new mongoose.Schema({
   publisher: String, // 发布人
   system_pub_time: String, // 系统操作的时间
   real_pub_time: String, // 原本发布的时间
-  pub_theme: String, // 公告主题
+  pub_theme: String, // 主题
   pub_content: Array, // 内容
   origin: String, // 新闻来源
   create_time: {type: Number, default:new Date()} 
