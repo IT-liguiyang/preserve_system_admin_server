@@ -245,33 +245,20 @@ router.post('/update_admin_password', (req, res) => {
 router.post('/manage/school/add', (req, res) => {
   // 读取请求参数数据
   const { school } = req.body;
-  // const school_name = school[1];
-
-  console.log(school);
-
-  // 处理: 判断是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
-  // 查询(根据username)
-  SchoolModel.findOne({school})
-    .then(school => {
-      // 如果school有值(已存在)
-      if (school) {
-        // 返回提示错误的信息
-        res.send({status: 1, msg: '此学校已存在！'});
-        return new Promise(() => {
-        });
-      } else { // 没值(不存在)
-        // 保存
-        return SchoolModel.create({...req.body});
-      }
-    })
-    .then(school => {
-      // 返回包含school的json数据
-      res.send({status: 0, data: school});
-    })
-    .catch(error => {
-      console.error('注册异常', error);
-      res.send({status: 1, msg: '添加学校管理员异常, 请重新尝试！'});
-    });
+  // 处理: 判断当前学校是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
+  SchoolModel.findOne({school}).then(school => {
+    if (school) { // 如果school有值(已存在)， 返回提示错误的信息
+      res.send({status: 1, msg: '此学校已存在！'});
+      return new Promise(() => {});
+    } else { // 没值(不存在)，则添加学校
+      return SchoolModel.create({...req.body});
+    }
+  }).then(school => {// 返回包含school的json数据
+    res.send({status: 0, data: school});
+  }).catch(error => {
+    console.error('注册异常', error);
+    res.send({status: 1, msg: '添加学校管理员异常, 请重新尝试！'});
+  });
 });
 
 // 获取学校列表
@@ -291,9 +278,6 @@ router.get('/manage/school/list', (req, res) => {
 router.post('/manage/school/update', (req, res) => {
   // 读取请求参数数据
   const { schoolObj, schoolId } = req.body; 
-  console.log(schoolObj, schoolId);
-  // 处理: 判断是否已经存在, 如果存在, 返回提示错误的信息, 如果不存在, 保存
-  // 查询(根据username)
   SchoolModel.updateOne({'_id': schoolId},{$set:schoolObj})
     .then(res.send({status: 0, msg: '修改学校信息成功！'}))
     .catch(error => {
@@ -305,8 +289,6 @@ router.post('/manage/school/update', (req, res) => {
 // 删除学校信息
 router.post('/manage/school/delete', (req, res) => {
   const {schoolId} = req.body;
-  // console.log(req.body);
-  // console.log(schoolId);
   SchoolModel.deleteOne({_id: schoolId})
     .then(res.send({status: 0}))
     .catch(error => {
@@ -327,17 +309,8 @@ router.get('/manage/school/search', (req, res) => {
     // 按所在区域搜索
     condition = {school: new RegExp(`^.*${schoolDistrict}.*$`)};
   } else if (openAreas) {
-    // 按所在区域搜索
+    // 按所在开放的场馆搜索
     condition = {openAreasInfoStr: new RegExp(`^.*${openAreas}.*$`)};
-    SchoolModel.find(condition)
-      .then(schools => {
-        res.send({status: 0, data: pageFilter(schools, pageNum, pageSize)});
-      })
-      .catch(error => {
-        console.error('搜索学校列表异常', error);
-        res.send({status: 1, msg: '搜索学校列表异常, 请重新尝试'});
-      });
-    return;
   }
   SchoolModel.find(condition)
     .then(schools => {
