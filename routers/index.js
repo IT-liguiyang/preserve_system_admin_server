@@ -274,6 +274,23 @@ router.get('/manage/school/list', (req, res) => {
     });
 });
 
+// 获取热门学校列表
+router.get('/manage/school/hot_list', (req, res) => {
+  const {district_name_list} = req.query;
+  console.log('district_name_list', district_name_list);
+  
+  // SchoolModel.find({"key": {$all:['30854','12345']}})
+  // SchoolModel.find({school: new RegExp(`^.*${schoolName}.*$`)})
+  SchoolModel.find({school: {$all:new RegExp(`^.*${district_name_list}.*$`)}})
+    .then((school) => {
+      res.send({status: 0, data: school});
+    })
+    .catch(error => {
+      console.error('获取学校列表异常', error);
+      res.send({status: 1, msg: '获取学校列表异常, 请重新尝试'});
+    });
+});
+
 // 更新学校信息
 router.post('/manage/school/update', (req, res) => {
   // 读取请求参数数据
@@ -989,6 +1006,21 @@ router.get('/manage/reservation_info/list_by_school_id', (req, res) => {
     });
 });
 
+// 获取预约信息列表 -- 通过学校名称
+router.get('/manage/reservation_info/list_by_school_name', (req, res) => {
+  const {school_name} = req.query;
+  console.log(school_name);
+  // 查询并根据发布时间进行排序
+  ReservationInfoModel.find({'res_school_name': school_name})
+    .then((reservation_info) => {
+      res.send({status: 0, data: reservation_info});
+    })
+    .catch(error => {
+      console.error('获取预约信息列表异常', error);
+      res.send({status: 1, msg: '获取预约信息列表异常, 请重新尝试'});
+    });
+});
+
 // 小程序获取预约信息列表 -- 通过学校id
 router.get('/wechat/reservation_info/list_by_school_id', (req, res) => {
   const {school_id} = req.query;
@@ -1362,6 +1394,18 @@ router.get('/manage/user/list', (req, res) => {
     .then((user) => {
     // console.log(news);
       res.send({status: 0, data: pageFilter(user, pageNum, pageSize)});
+    })
+    .catch(error => {
+      console.error('获取用户列表异常', error);
+      res.send({status: 1, msg: '获取用户列表异常, 请重新尝试'});
+    });
+});
+
+// 获取用户列表-不带分页
+router.get('/manage/user/all_list', (req, res) => {
+  UserModel.find()
+    .then((user) => {
+      res.send({status: 0, data: user});
     })
     .catch(error => {
       console.error('获取用户列表异常', error);

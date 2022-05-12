@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const reservation_infoSchema = new mongoose.Schema({
   res_realname: String, // 姓名
   res_username: String, // 手机号
+  ID_number: String, // 身份证号
   res_avater: Array, // 用户头像
   res_school_name: String, // 已约学校
   res_school_id: String, // 已约学校编号
